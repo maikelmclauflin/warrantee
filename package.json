@@ -1,0 +1,27 @@
+{
+  "name": "warrantee",
+  "version": "1.0.0",
+  "description": "* [ ] home / search * [ ] browse w/ search page * [ ] item detail page     * [ ] details about item     * [ ] add to cart * [ ] cart / checkout page     * [ ] emits event of purchases     * [ ] prints the following keys     * [ ] shipping contract",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^2.4.0",
+    "chai": "^4.2.0",
+    "truffle-assertions": "^0.9.2",
+    "uuid": "^3.3.3",
+    "web3": "^1.2.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "npm run clean-network && npm run clean && npm run reset-migrate && npm run just-test",
+    "clean-network": "truffle networks --clean",
+    "clean": "rm -rf ./client/src/contracts",
+    "just-test": "truffle test --network develop",
+    "reset-migrate": "truffle migrate --reset --network develop"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
