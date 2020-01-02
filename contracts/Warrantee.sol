@@ -124,7 +124,7 @@ contract Warrantee is ERC721Burnable, ERC721Mintable, Ownable, ReentrancyGuard {
       terminated: false
     }));
   }
-  function valuation (bool includeExpired) public view returns (uint256) {
+  function outstanding (bool includeExpired) public view returns (uint256) {
     uint minTimestamp = timestamp();
     if (includeExpired) {
       minTimestamp = 0;
@@ -140,7 +140,8 @@ contract Warrantee is ERC721Burnable, ERC721Mintable, Ownable, ReentrancyGuard {
     }
     return _valuation;
   }
-  // function () external payable {
-  //   require(false, "unable to call default function");
-  // }
+  function () external payable {
+    // add to owner so owner can send to whom they deem
+    deposit(this.owner(), msg.value);
+  }
 }

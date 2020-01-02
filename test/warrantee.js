@@ -22,20 +22,20 @@ contract("Warrantee", (accounts) => {
       from: accounts[0],
       value: 5
     })
-    assert.equal('50', (await warrantee.valuation(false)).toString())
+    assert.equal('50', (await warrantee.outstanding(false)).toString())
 
     await warrantee.create(accounts[1], 100, 2, {
       from: accounts[0],
       value: 10
     })
-    assert.equal('150', (await warrantee.valuation(false)).toString())
-    assert.equal('150', (await warrantee.valuation(true)).toString())
+    assert.equal('150', (await warrantee.outstanding(false)).toString())
+    assert.equal('150', (await warrantee.outstanding(true)).toString())
     await timeout(1200)
-    assert.equal('100', (await warrantee.valuation(false)).toString())
-    assert.equal('150', (await warrantee.valuation(true)).toString())
+    assert.equal('100', (await warrantee.outstanding(false)).toString())
+    assert.equal('150', (await warrantee.outstanding(true)).toString())
     await timeout(1500)
-    assert.equal('0', (await warrantee.valuation(false)).toString())
-    assert.equal('150', (await warrantee.valuation(true)).toString())
+    assert.equal('0', (await warrantee.outstanding(false)).toString())
+    assert.equal('150', (await warrantee.outstanding(true)).toString())
   })
   it('should be able to claim a warranty #claim()', async () => {
     const createTx = await warrantee.create(accounts[1], 50, 10, {
@@ -46,7 +46,7 @@ contract("Warrantee", (accounts) => {
       return web3.utils.toDecimal(ev.from) === 0 && ev.to === accounts[1]
     })
     assert.equal(1, createTx.logs.length, "only one event is emitted")
-    assert.equal('50', (await warrantee.valuation(false)).toString())
+    assert.equal('50', (await warrantee.outstanding(false)).toString())
     const tokenId = createTx.logs[0].args[2].toNumber()
     const claimTx = await warrantee.claim(tokenId, {
       from: accounts[1]
@@ -54,8 +54,8 @@ contract("Warrantee", (accounts) => {
     truffleAssert.eventEmitted(claimTx, "Terminated", (ev) => {
       return ev.tokenId.toNumber() === tokenId
     })
-    assert.equal('0', (await warrantee.valuation(false)).toString())
-    assert.equal('0', (await warrantee.valuation(true)).toString())
+    assert.equal('0', (await warrantee.outstanding(false)).toString())
+    assert.equal('0', (await warrantee.outstanding(true)).toString())
   })
   it('should decay the value returned linearly', async () => {
     const createTx = await warrantee.create(accounts[1], 50, 10, {
