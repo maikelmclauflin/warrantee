@@ -18,6 +18,7 @@ contract("Warrantee", (accounts) => {
     })
   })
   it("should fund a warranty", async () => {
+    // console.log("start")
     await warrantee.create(accounts[1], 50, 1, {
       from: accounts[0],
       value: 5
@@ -36,8 +37,10 @@ contract("Warrantee", (accounts) => {
     await timeout(1500)
     assert.equal('0', (await warrantee.outstanding(false)).toString())
     assert.equal('150', (await warrantee.outstanding(true)).toString())
+    // console.log("end")
   })
   it('should be able to claim a warranty #claim()', async () => {
+    // console.log("start")
     const createTx = await warrantee.create(accounts[1], 50, 10, {
       from: accounts[0],
       value: 5
@@ -56,8 +59,10 @@ contract("Warrantee", (accounts) => {
     })
     assert.equal('0', (await warrantee.outstanding(false)).toString())
     assert.equal('0', (await warrantee.outstanding(true)).toString())
+    // console.log("end")
   })
   it('should decay the value returned linearly', async () => {
+    // console.log("start")
     const createTx = await warrantee.create(accounts[1], 50, 10, {
       from: accounts[0],
       value: 5
@@ -72,6 +77,7 @@ contract("Warrantee", (accounts) => {
     assert.equal(balance.toNumber(), 4)
     const ownerBalance = await warrantee.balance(accounts[0])
     assert.equal(ownerBalance.toNumber(), 1)
+    // console.log("end")
   })
 })
 
