@@ -1,15 +1,12 @@
 pragma solidity >=0.4.21 <0.7.0;
-// pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Mintable.sol";
-
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract Warranty is ERC721Burnable, ERC721Mintable, ReentrancyGuard {
+contract Warranty is ERC721Mintable, ReentrancyGuard {
   using SafeMath for uint256;
   using Math for uint256;
   using Address for address payable;
@@ -270,25 +267,21 @@ contract Warranty is ERC721Burnable, ERC721Mintable, ReentrancyGuard {
     }));
     return tokenId;
   }
-  // // outstanding claims that have or have not expired
-  // function outstanding (bool includeExpired) public view returns (uint256, uint256[] memory, uint256[] memory) {
-  //   uint minTimestamp = timestamp();
-  //   if (includeExpired) {
-  //     minTimestamp = 0;
-  //   }
-  //   uint256 _valuation = 0;
-  //   uint256[] memory activatedAt;
-  //   uint256[] memory expiresAfter;
-  //   for (uint256 i = 0; i < _claims.length; i += 1) {
-  //     Claim memory claim = _claims[i];
-  //     activatedAt.push(claim.activatedAt);
-  //     expiresAfter.push(claim.expiresAfter);
-  //     if (!claim.redeemed && (minTimestamp <= claim.activatedAt.add(claim.expiresAfter))) {
-  //       _valuation = _valuation.add(claim.valuation);
-  //     }
-  //   }
-  //   return (_valuation, activatedAt, expiresAfter);
-  // }
+  // outstanding claims that have or have not expired
+  function outstanding (bool includeExpired) public view returns (uint256) {
+    uint minTimestamp = timestamp();
+    if (includeExpired) {
+      minTimestamp = 0;
+    }
+    uint256 _valuation = 0;
+    for (uint256 i = 0; i < _claims.length; i += 1) {
+      Claim memory claim = _claims[i];
+      if (!claim.redeemed && (minTimestamp <= claim.activatedAt.add(claim.expiresAfter))) {
+        _valuation = _valuation.add(claim.valuation);
+      }
+    }
+    return _valuation;
+  }
 
   // function () external payable {
   //   require(false, "cannot run default function");
