@@ -99,9 +99,7 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
   // overwrites PullPayment method to only allow owner to assign value to be pulled
   // implicit payable just eats eth
   function deposit(address payee, uint256 amount) internal {
-    if (amount == 0) {
-      return;
-    }
+    if (amount == 0) return;
     _balances[payee] = _balances[payee].add(amount);
     emit Deposited(payee, amount);
   }
@@ -118,20 +116,22 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
   {
     Claim storage claim = _claims[tokenId];
     // if the warrantor sends more than enough or has enough in their balance
-    uint256 value = claim.value.add(msg.value).add(balance(msg.sender));
-    require(claim.valuation <= value, "claim can only be fullfilled for the original agreed upon price");
+    uint256 bal = balance(msg.sender);
+    uint256 value = claim.value.add(msg.value).add(bal);
+    require(value >= claim.valuation, "claim can only be fullfilled for the original agreed upon valuation");
+    deposit(msg.sender, value.sub(claim.valuation).sub(bal));
+    deposit(this.ownerOf(tokenId), claim.valuation);
+    claim.value = 0; // remove funds locked in claim
     emit Fulfilled(msg.sender, warrantee, tokenId, claim.redeemed);
-    deposit(this.ownerOf(tokenId), claim.valuation.min(value));
-    claim.value = 0;
     _terminateClaim(tokenId);
   }
   function _terminateClaim(uint256 tokenId) internal {
     Claim storage claim = _claims[tokenId];
     if (!claim.fulfilled) {
       // should only have value assigned, to be divii'd up if claim has not been fulfilled
-      uint256 time = timestamp();
       uint256 value = claim.value;
-      uint256 elapsed = time.sub(time.min(claim.activatedAt));
+      emit Stage(1);
+      uint256 elapsed = claim.expiresAfter.sub(timeToClaimExpire(tokenId));
       uint256 leftover = value.mul(claim.expiresAfter).sub(value.mul(elapsed)).div(claim.expiresAfter);
       deposit(this.ownerOf(tokenId), leftover);
       deposit(claim.warrantor, value.sub(leftover));
