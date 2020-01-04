@@ -43,13 +43,9 @@ contract("Warranty", (accounts) => {
       value: 5
     })
     const tokenId = getTokenId(createTx, accounts[1])
-    try {
-      await warranty.redeemClaim(tokenId, {
-        from: accounts[2]
-      })
-    } catch (e) {
-      expect(e.reason).to.be.equal('sender must be the owner of the token')
-    }
+    await throws(warranty.redeemClaim(tokenId, {
+      from: accounts[2]
+    }), 'sender must be the owner of the token')
     await warranty.redeemClaim(tokenId, {
       from: accounts[1]
     })
@@ -74,40 +70,41 @@ contract("Warranty", (accounts) => {
     const ownerBalance = await warranty.balance(accounts[0])
     expect(ownerBalance).to.be.bignumber.equal(2)
   })
-  // it('unlocked funds can be released', async () => {
-  //   const createTx = await warranty.createAndGuaranteeClaim(accounts[1], toWei('5', 'ether'), 10, {
-  //     from: accounts[0],
-  //     value: toWei('0.5', "ether")
-  //   })
-  //   await timeout(4000)
-  //   const tokenId = createTx.logs[0].args[2].toNumber()
-  //   await warranty.terminateClaim(tokenId, {
-  //     from: accounts[0]
-  //   })
-  //   const customerBalance = await warranty.balance(accounts[1])
-  //   // as long as this happens within a second, should be 40, otherwise will continue to decay to 35, 30, 25, etc
-  //   assert.equal(customerBalance.toString(), toWei('0.3', "ether").toString())
-  //   const ownerBalance = await warranty.balance(accounts[0])
-  //   assert.equal(ownerBalance.toString(), toWei('0.2', "ether").toString())
-  //   // cache previous balances to be used below
-  //   const balance0 = new BigNumber(await web3.eth.getBalance(accounts[0]))
-  //   const balance1 = new BigNumber(await web3.eth.getBalance(accounts[1]))
-  //   // release funds back into their respective accounts
-  //   await Promise.all([
-  //     warranty.release(accounts[0], ownerBalance.toString(), { from: accounts[0] }),
-  //     warranty.release(accounts[1], customerBalance.toString(), { from: accounts[1] })
-  //   ])
-  //   // check that nothing was left in the contract
-  //   assert.equal('0', (await warranty.balance(accounts[0])).toString())
-  //   assert.equal('0', (await warranty.balance(accounts[1])).toString())
-  //   // approximate the value transfer minus gas
-  //   const balanceAfter0 = await web3.eth.getBalance(accounts[0])
-  //   const balanceAfter1 = await web3.eth.getBalance(accounts[1])
-  //   expect(balanceAfter0.toString()).to.be.bignumber.at.least(balance0.plus(toWei('0.199', 'ether')))
-  //   expect(balanceAfter0.toString()).to.be.bignumber.at.most(balance0.plus(toWei('0.2', 'ether')))
-  //   expect(balanceAfter1.toString()).to.be.bignumber.at.least(balance1.plus(toWei('0.299', 'ether')))
-  //   expect(balanceAfter1.toString()).to.be.bignumber.at.most(balance1.plus(toWei('0.3', 'ether')))
-  // })
+  it('unlocked funds can be released', async () => {
+    const valuation = toWei('5', 'ether')
+    const createTx = await warranty.createAndGuaranteeClaim(accounts[1], valuation, 10, {
+      from: accounts[0],
+      value: toWei('0.5', "ether")
+    })
+    const tokenId = getTokenId(createTx, accounts[1])
+    await timeoutUntil(((await warranty.claimExpireTime(tokenId)) - 6) * 1000)
+    await warranty.terminateClaim(tokenId, {
+      from: accounts[0]
+    })
+    const customerBalance = await warranty.balance(accounts[1])
+    // as long as this happens within a second, should be 40, otherwise will continue to decay to 35, 30, 25, etc
+    expect(customerBalance).to.be.bignumber.equal(toWei('0.3', "ether"))
+    const ownerBalance = await warranty.balance(accounts[0])
+    expect(ownerBalance).to.be.bignumber.equal(toWei('0.2', "ether"))
+    // cache previous balances to be used below
+    const balance0 = new BigNumber(await web3.eth.getBalance(accounts[0]))
+    const balance1 = new BigNumber(await web3.eth.getBalance(accounts[1]))
+    // funds can be released at the pleasure of the actor
+    await Promise.all([
+      warranty.releaseTo(accounts[0], ownerBalance.toString(), { from: accounts[0] }),
+      warranty.releaseTo(accounts[1], customerBalance.toString(), { from: accounts[1] })
+    ])
+    // check that nothing was left in the contract
+    expect(await warranty.balance(accounts[0])).to.be.bignumber.equal('0')
+    expect(await warranty.balance(accounts[1])).to.be.bignumber.equal('0')
+    // approximate the value transfer minus gas
+    const balanceAfter0 = await web3.eth.getBalance(accounts[0])
+    const balanceAfter1 = await web3.eth.getBalance(accounts[1])
+    expect(balanceAfter0).to.be.bignumber.at.least(balance0.plus(toWei('0.199', 'ether')))
+    expect(balanceAfter0).to.be.bignumber.at.most(balance0.plus(toWei('0.2', 'ether')))
+    expect(balanceAfter1).to.be.bignumber.at.least(balance1.plus(toWei('0.299', 'ether')))
+    expect(balanceAfter1).to.be.bignumber.at.most(balance1.plus(toWei('0.3', 'ether')))
+  })
 })
 
 function getTokenId(createTx, recipient) {
@@ -117,6 +114,14 @@ function getTokenId(createTx, recipient) {
     return web3.utils.toDecimal(ev.from) === 0 && recipient === ev.to;
   })
   return tokenId
+}
+
+async function throws(promise, reason) {
+  try {
+    await promise
+  } catch (e) {
+    expect(e.reason).to.be.equal(reason)
+  }
 }
 
 function timeoutUntil(ms) {

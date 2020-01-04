@@ -147,8 +147,7 @@ contract Warranty is ERC721Burnable, ERC721Mintable, ReentrancyGuard {
     public
     notTerminatedOnly(tokenId)
   {
-    Claim memory claim = _claims[tokenId];
-    require(timestamp() > claim.activatedAt.add(claim.expiresAfter), "good bookkeeping can only be called when claim has expired");
+    require(timestamp() > claimExpireTime(tokenId), "good bookkeeping can only be called when claim has expired");
     _terminateClaim(tokenId);
   }
   // terminateClaim ends the claim
@@ -159,7 +158,7 @@ contract Warranty is ERC721Burnable, ERC721Mintable, ReentrancyGuard {
   {
     _terminateClaim(tokenId);
   }
-  function release(address payable _target, uint256 amount)
+  function releaseTo(address payable _target, uint256 amount)
     public
     nonReentrant
     greaterThanOrEqual(_balances[msg.sender], amount)
@@ -183,8 +182,7 @@ contract Warranty is ERC721Burnable, ERC721Mintable, ReentrancyGuard {
     return tokenId;
   }
   function claimExpireTime(uint256 tokenId) public view returns(uint256) {
-    Claim memory claim = _claims[tokenId];
-    return claim.activatedAt.add(claim.expiresAfter);
+    return _claims[tokenId].activatedAt.add(_claims[tokenId].expiresAfter);
   }
   function timeToClaimExpire(uint256 tokenId) public view returns(uint256) {
     uint256 expireTime = claimExpireTime(tokenId);
