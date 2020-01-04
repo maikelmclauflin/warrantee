@@ -14,12 +14,16 @@ module.exports = {
     develop: {
       port: 8545,
       network_id: "*",
-      host: "127.0.0.1"
+      host: "127.0.0.1",
+      blockTime: 1,
+      websockets: true
     },
     test: {
       port: 8545,
       network_id: "*",
-      host: "127.0.0.1"
+      host: "127.0.0.1",
+      blockTime: 1,
+      websockets: true
     }
   },
   mocha: {
