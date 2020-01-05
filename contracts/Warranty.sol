@@ -31,12 +31,11 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
     bool terminated;
   }
 
-  event Deposited(address indexed addr, uint256 amount);
+  event BalanceUpdated(address indexed addr, uint256 amount, uint256 balance, bool negative);
   event Withdrawn(address indexed addr, address indexed target, uint256 amount, uint256 balance);
   event Redeemed(address indexed warrantor, address indexed warrantee, uint256 indexed tokenId);
   event Fulfilled(address indexed warrantor, address indexed warrantee, uint256 indexed tokenId, bool redeemed);
   event Terminated(uint256 indexed tokenId);
-  event Stage(uint256 id);
 
   modifier warranteeOrWarrantorOnly(uint256 tokenId) {
     require((
@@ -98,13 +97,24 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
   }
   // overwrites PullPayment method to only allow owner to assign value to be pulled
   // implicit payable just eats eth
-  function deposit(address payee, uint256 amount) internal {
+  function updateBalance(address payee, uint256 amount, bool negative) internal {
     if (amount == 0) return;
-    _balances[payee] = _balances[payee].add(amount);
-    emit Deposited(payee, amount);
+    if (negative) {
+      _balances[payee] = _balances[payee].sub(amount);
+    } else {
+      _balances[payee] = _balances[payee].add(amount);
+    }
+    emit BalanceUpdated(payee, amount, _balances[payee], negative);
   }
+  function deposit(address payee, uint256 amount) internal {
+    updateBalance(payee, amount, false);
+  }
+  // the publicly available version of deposit
   function credit(address payee) public payable {
     deposit(payee, msg.value);
+  }
+  function debit(address payer, uint256 amount) internal {
+    updateBalance(payer, amount, true);
   }
   // the warrantor can fulfill the claim for the amount agreed upon when the claim was first created.
   function fulfill(address warrantee, uint256 tokenId)
@@ -117,11 +127,13 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
     Claim storage claim = _claims[tokenId];
     // if the warrantor sends more than enough or has enough in their balance
     uint256 bal = balance(msg.sender);
+    debit(msg.sender, bal); // guarantor temporarily has zero balance
     uint256 value = claim.value.add(msg.value).add(bal);
     require(value >= claim.valuation, "claim can only be fullfilled for the original agreed upon valuation");
-    deposit(msg.sender, value.sub(claim.valuation).sub(bal));
+    deposit(msg.sender, value.sub(claim.valuation));
     deposit(this.ownerOf(tokenId), claim.valuation);
     claim.value = 0; // remove funds locked in claim
+    claim.fulfilled = true;
     emit Fulfilled(msg.sender, warrantee, tokenId, claim.redeemed);
     _terminateClaim(tokenId);
   }
@@ -130,7 +142,6 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
     if (!claim.fulfilled) {
       // should only have value assigned, to be divii'd up if claim has not been fulfilled
       uint256 value = claim.value;
-      emit Stage(1);
       uint256 elapsed = claim.expiresAfter.sub(timeToClaimExpire(tokenId));
       uint256 leftover = value.mul(claim.expiresAfter).sub(value.mul(elapsed)).div(claim.expiresAfter);
       deposit(this.ownerOf(tokenId), leftover);
@@ -283,7 +294,7 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
     return _valuation;
   }
 
-  // function () external payable {
-  //   require(false, "cannot run default function");
-  // }
+  function () external payable {
+    credit(msg.sender);
+  }
 }

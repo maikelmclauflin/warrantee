@@ -17,10 +17,9 @@
     "chai-bignumber": "^3.0.0"
   },
   "scripts": {
-    "test": "npm run clean-network && npm run clean && npm run build",
-    "build": "npm run reset-migrate && npm run just-test",
+    "test": "npm run reset-migrate && npm run just-test",
     "clean-network": "truffle networks --clean",
-    "clean": "rm -rf ./client/src/contracts",
+    "clean": "npm run clean-network && rm -rf ./client/src/contracts",
     "just-test": "truffle test --network develop",
     "reset-migrate": "truffle migrate --reset --network develop"
   },

@@ -145,18 +145,32 @@ contract("Warranty", (accounts) => {
       expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(10000)
     })
     it('can be provided more than enough value', async () => {
-      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, {
+      const createTx1 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, {
         from: accounts[0],
         value: 1000
       })
-      const tokenId = getTokenId(createTx, accounts[1])
+      const tokenId1 = getTokenId(createTx1, accounts[1])
       await timeout(1000)
-      await warranty.fulfill(accounts[1], tokenId, {
+      await warranty.fulfill(accounts[1], tokenId1, {
         from: accounts[0],
         value: 18000
       })
       expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(9000)
       expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(10000)
+      // create another one
+      const createTx2 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, {
+        from: accounts[0],
+        value: 1000
+      })
+      const tokenId2 = getTokenId(createTx2, accounts[1])
+      await timeout(1000)
+      // sending zero value
+      await warranty.fulfill(accounts[1], tokenId2, {
+        from: accounts[0],
+        value: 0
+      })
+      expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(0)
+      expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(20000)
     })
   })
 })
@@ -174,6 +188,9 @@ async function throws(promise, reason) {
   try {
     await promise
   } catch (e) {
+    if (!reason) {
+      console.log(e)
+    }
     expect(e.reason).to.be.equal(reason)
   }
 }
