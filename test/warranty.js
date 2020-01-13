@@ -196,8 +196,7 @@ async function throws(promise, reason) {
 }
 
 function timeoutUntil(ms) {
-  const mil = ms - (new Date())
-  return timeout(mil)
+  return timeout(ms - (new Date()))
 }
 
 function timeout(ms) {
