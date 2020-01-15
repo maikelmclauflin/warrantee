@@ -14,7 +14,6 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
   mapping(uint256 => address) public _pendingTransfer;
   mapping(address => uint256) public _balances;
 
-  string public _sku;
   string public symbol;
   string public name;
   uint256 public decimals;
@@ -83,6 +82,24 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
   function balance(address account) public view returns(uint256) {
     return _balances[account];
   }
+  // function getAllGuaranteedBy(address addr, uint256 range, uint256 offset) public view returns(uint256[] memory) {
+  //   uint256[] memory ids;
+  //   for (uint256 i = 0; i < _claims.length; i += 1) {
+  //     if (addr == _claims[i].warrantor) {
+  //       ids.push(i);
+  //     }
+  //   }
+  //   return ids;
+  // }
+  // function getAllOwnedBy(address addr, uint256 range, uint256 offset) public view returns(uint256[] memory) {
+  //   uint256[] memory ids;
+  //   for (uint256 i = 0; i < _claims.length; i += 1) {
+  //     if (addr == this.ownerOf(i)) {
+  //       ids.push(i);
+  //     }
+  //   }
+  //   return ids;
+  // }
   function extendClaimExpiration(uint256 tokenId, uint256 activatedAt, uint256 extraTimeSeconds)
     public
     warrantorOnly(tokenId)
@@ -186,7 +203,7 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
     returns(uint256)
   {
     uint256 tokenId = createClaim(warrantee, valuation, expiresAfter);
-    guaranteeClaim(tokenId, timestamp(), expiresAfter);
+    guaranteeClaim(tokenId, timestamp());
     return tokenId;
   }
   function claimExpireTime(uint256 tokenId) public view returns(uint256) {
@@ -201,7 +218,7 @@ contract Warranty is ERC721Mintable, ReentrancyGuard {
     return expireTime.sub(tsmp);
   }
   // guarantee a claim by assigning value to it
-  function guaranteeClaim(uint256 tokenId, uint256 activatedAt, uint256 expiresAfter)
+  function guaranteeClaim(uint256 tokenId, uint256 activatedAt)
     public
     payable
     notRedeemedOnly(tokenId)

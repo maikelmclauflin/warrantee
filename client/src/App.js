@@ -1,20 +1,46 @@
 import React, { Component } from "react";
-import SimpleStorageContract from "./contracts/Warranty.json";
+import styled from 'styled-components';
+import Warranty from "./contracts/Warranty.json";
 import getWeb3 from "./getWeb3";
+import {
+  Loader,
+  Box
+} from 'rimble-ui'
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   withRouter
 } from "react-router-dom";
+import Container from 'react-bootstrap/Container'
 import { Customer } from './Customer'
 import { Home } from './Home'
-import { Business } from './Business'
-import { Navigation } from './Navigation'
+import { Business } from './Business/index'
+import { Navigation } from './Navigation/'
 import "./App.css";
 
-const NavigationWithRouter = withRouter(Navigation)
-
+const BusinessWithRouter = withRouter(Business)
+const routes = [{
+  to: '/',
+  content: 'home'
+}, {
+  to: '/customer/',
+  content: 'customer'
+}, {
+  to: '/business/',
+  content: 'business'
+}]
+const StyleContainer = styled.div`
+.container {
+  margin: 0 auto;
+}
+.loader-text-centered {
+  text-align: center;
+}
+.loader-centered {
+  margin: 0 auto;
+}
+`;
 class App extends Component {
   state = {
     storageValue: 0,
@@ -33,9 +59,9 @@ class App extends Component {
 
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
-      const deployedNetwork = SimpleStorageContract.networks[networkId];
+      const deployedNetwork = Warranty.networks[networkId];
       const instance = new web3.eth.Contract(
-        SimpleStorageContract.abi,
+        Warranty.abi,
         deployedNetwork && deployedNetwork.address,
       );
 
@@ -54,28 +80,41 @@ class App extends Component {
       );
     }
   };
-
-  render() {
+  renderChildren() {
     if (!this.state.web3) {
-      return (<div>Loading Web3, accounts, and contract...</div>);
+      return (
+        <Box mt={3}>
+          <h3 className="loader-text-centered">Loading Web3, accounts, and contract...</h3>
+          <Loader size="80px" className="loader-centered" />
+        </Box>
+      );
     }
     return (
-      <div className="App">
+      <Switch>
+        <Route path="/customer/">
+          <Customer />
+        </Route>
+        <Route path="/business/">
+          <BusinessWithRouter contract={this.state.contract} web3={this.state.web3} />
+        </Route>
+        <Route path="/">
+          <Home />
+        </Route>
+      </Switch>
+    )
+  }
+  render() {
+    return (
+      <StyleContainer className="warranty-app">
         <Router>
-          <NavigationWithRouter />
-          <Switch>
-            <Route path="/customer/">
-              <Customer />
-            </Route>
-            <Route path="/business/">
-              <Business />
-            </Route>
-            <Route path="/">
-              <Home />
-            </Route>
-          </Switch>
+          <Container>
+            <Navigation list={routes} />
+          </Container>
+          <Box className="container">
+            {this.renderChildren()}
+          </Box>
         </Router>
-      </div>
+      </StyleContainer>
     );
   }
 }
