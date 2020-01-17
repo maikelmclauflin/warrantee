@@ -72,6 +72,9 @@ export class CreateWarranty extends Component {
             from: givenProvider.selectedAddress,
             value: toWei(value, 'ether')
         })
+        if (!this.toastProvider) {
+            return
+        }
         this.toastProvider.addMessage("Processing warranty creation...", {
             // secondaryMessage: "Check progress on Etherscan",
             // actionHref:
@@ -82,7 +85,6 @@ export class CreateWarranty extends Component {
         this.setState({
             receipt
         })
-        console.log(receipt)
     }
     render() {
         return (

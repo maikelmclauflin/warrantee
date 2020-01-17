@@ -9,6 +9,7 @@ const getWeb3 = () =>
         const web3 = new Web3(window.ethereum);
         try {
           // Request account access if needed
+          window.ethereum.autoRefreshOnNetworkChange = false
           await window.ethereum.enable();
           // Acccounts now exposed
           resolve(web3);

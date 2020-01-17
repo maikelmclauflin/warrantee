@@ -1,9 +1,10 @@
 import React, { Component } from "react";
 import styled from 'styled-components';
-import Warranty from "./contracts/Warranty.json";
-import getWeb3 from "./getWeb3";
+import { Web3Context } from './Web3'
 import {
-  Loader,
+  Loader
+} from './components/Loader'
+import {
   Box
 } from 'rimble-ui'
 import {
@@ -18,6 +19,7 @@ import { Home } from './Home'
 import { Business } from './Business/index'
 import { Navigation } from './Navigation/'
 import "./App.css";
+// import Web3 from "web3";
 
 const BusinessWithRouter = withRouter(Business)
 const routes = [{
@@ -49,43 +51,13 @@ class App extends Component {
     contract: null
   };
 
-  componentDidMount = async () => {
-    try {
-      // Get network provider and web3 instance.
-      const web3 = await getWeb3();
-
-      // Use web3 to get the user's accounts.
-      const accounts = await web3.eth.getAccounts();
-
-      // Get the contract instance.
-      const networkId = await web3.eth.net.getId();
-      const deployedNetwork = Warranty.networks[networkId];
-      const instance = new web3.eth.Contract(
-        Warranty.abi,
-        deployedNetwork && deployedNetwork.address,
-      );
-
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
-      this.setState({
-        web3,
-        accounts,
-        contract: instance
-      });
-    } catch (error) {
-      // Catch any errors for any of the above operations.
-      console.error(error);
-      alert(
-        `Failed to load web3, accounts, or contract. Check console for details.`,
-      );
-    }
-  };
+  // componentDidMount = async () => {
+  // };
   renderChildren() {
-    if (!this.state.web3) {
+    if (!this.context.web3) {
       return (
         <Box mt={3}>
-          <h3 className="loader-text-centered">Loading Web3, accounts, and contract...</h3>
-          <Loader size="80px" className="loader-centered" />
+          <Loader>Loading Web3, accounts, and contract...</Loader>
         </Box>
       );
     }
@@ -95,7 +67,7 @@ class App extends Component {
           <Customer />
         </Route>
         <Route path="/business/">
-          <BusinessWithRouter contract={this.state.contract} web3={this.state.web3} />
+          <BusinessWithRouter />
         </Route>
         <Route path="/">
           <Home />
@@ -108,7 +80,7 @@ class App extends Component {
       <StyleContainer className="warranty-app">
         <Router>
           <Container>
-            <Navigation list={routes} />
+            <Navigation list={routes} user={true} />
           </Container>
           <Box className="container">
             {this.renderChildren()}
@@ -118,5 +90,7 @@ class App extends Component {
     );
   }
 }
+
+App.contextType = Web3Context
 
 export default App;
