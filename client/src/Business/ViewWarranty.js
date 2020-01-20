@@ -1,71 +1,51 @@
-import React, { Component } from "react"
+import React from "react"
 import { Web3Context } from '../Web3'
 import {
-    Box,
     Button,
-    Text as RimbleText
+    Box
 } from 'rimble-ui'
+import { pathAppend } from '../utils'
+import { Link } from '../components/Link'
 import { Progress } from '../components/Progress'
-import { Loader } from '../components/Loader'
-import { Claim } from "../model/Claim"
+import { Text } from '../components/Text'
+import { LoadsWarranty } from "./LoadsWarranty"
 
-export class ViewWarranty extends Component {
-    state = {
-        claim: null
-    }
-    async componentDidMount() {
-        const { props, context } = this
+export class ViewWarranty extends LoadsWarranty {
+    renderLoaded() {
+        const { state, props } = this
         const { match } = props
-        const { contract, web3 } = context
-        if (!contract) {
-            return
-        }
-        const { id } = match.params
-        const claim = new Claim(id, web3, contract)
-        await claim.setup()
-        if (!claim.exists()) {
-            return
-        }
-        this.setState({
-            claim
-        })
-    }
-    renderChildren() {
-        const { claim } = this.state
-        if (!claim) {
-            return (
-                <Loader>Loading claim...</Loader>
-            )
-        }
+        const { url } = match
+        const { claim } = state
         return (
-            <>
+            <Box my={3}>
                 <Text title="Owner">{claim.owner}</Text>
+                <Text title="ID">{claim.id}</Text>
                 <Text title="Activated At">{claim.activatedTime()}</Text>
                 <Text title="Expires At">{claim.expiredTime()}</Text>
                 <Text title="Progress"><Progress claim={claim} /></Text>
-                <Button mr={3} my={3} disabled={claim.terminated}>Terminate</Button>
-                <Button.Outline mr={3} my={3} disabled={claim.terminated || claim.redeemed}>Redeem</Button.Outline>
-                <Button.Outline mr={3} my={3} disabled={claim.terminated || !claim.redeemed}>Deredeem</Button.Outline>
-                <Button mr={3} my={3} disabled={claim.terminated || !claim.redeemed}>Fulfill</Button>
-            </>
-        )
-    }
-    render() {
-        return (
-            <Box mt={3}>
-                {this.renderChildren()}
+                <Box mr={3} my={3} width="auto" display="inline-block">
+                    <Link to={pathAppend(url, 'terminate/')}>
+                        <Button disabled={!claim.can('terminate')}>Terminate</Button>
+                    </Link>
+                </Box>
+                <Box mr={3} my={3} width="auto" display="inline-block">
+                    <Link to={pathAppend(url, 'redeem/')}>
+                        <Button.Outline disabled={!claim.can('redeem')}>Redeem</Button.Outline>
+                    </Link>
+                </Box>
+                <Box mr={3} my={3} width="auto" display="inline-block">
+                    <Link to={pathAppend(url, 'deredeem/')}>
+                        <Button.Outline disabled={!claim.can('deredeem')}>Deredeem</Button.Outline>
+                    </Link>
+                </Box>
+                <Box mr={3} my={3} width="auto" display="inline-block">
+                    <Link to={pathAppend(url, 'fulfill/')}>
+                        <Button disabled={!claim.can('fulfill')}>Fulfill</Button>
+                    </Link>
+                </Box>
             </Box>
         )
     }
 }
 
 ViewWarranty.contextType = Web3Context
-
-function Text({ title, children }) {
-    return (
-        <RimbleText>
-            <RimbleText.span color="#333" minWidth={120} display="inline-block">{title}:&nbsp;</RimbleText.span>
-            <RimbleText.span color="#000">{children}</RimbleText.span>
-        </RimbleText>
-    )
-}

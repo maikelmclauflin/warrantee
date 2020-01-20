@@ -1,20 +1,37 @@
 import { toDate } from '../utils'
 import _ from 'lodash'
 import BigNumber from 'bignumber.js'
+const claims = {}
 export class Claim {
     constructor(id, web3, contract) {
         this.id = id
         this.web3 = web3
         this.contract = contract
     }
-    async setup() {
+    async fetch() {
         const { id, contract } = this
+        const stored = claims[id]
+        if (stored && stored.owner) {
+            return stored
+        }
         const { methods } = contract
         const [owner, claim] = await Promise.all([
             methods.ownerOf(id).call(),
             methods._claims(id).call()
         ])
+        if (!claim) {
+            throw new Error('claim not found')
+        }
         this.initialize(owner, claim)
+        claims[id] = this
+        return this
+    }
+    update() {
+        delete claims[this.id]
+        return this.clone().fetch()
+    }
+    clone() {
+        return new Claim(this.id, this.web3, this.contract)
     }
     initialize(owner, claim) {
         Object.assign(this, claim, {
@@ -40,5 +57,25 @@ export class Claim {
         const progressDenominator = expireTime.minus(activatedTime)
         const progressNumerator = new BigNumber(value).minus(activatedTime)
         return BigNumber.min(progressNumerator.dividedBy(progressDenominator), 1)
+    }
+    can(key) {
+        if (key === 'terminate') {
+            return !this.terminated
+        }
+        if (key === 'redeem') {
+            return !this.terminated && !this.redeemed
+        }
+        if (key === 'deredeem') {
+            return !this.terminated && this.redeemed
+        }
+        if (key === 'fulfill') {
+            return !this.terminated
+        }
+    }
+    states() {
+        return ['terminated', 'fulfilled', 'redeemed'].reduce((memo, key) => {
+            if (this[key]) return memo.concat(key)
+            return memo
+        }, [])
     }
 }

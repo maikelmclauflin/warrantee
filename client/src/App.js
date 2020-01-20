@@ -1,5 +1,6 @@
-import React, { Component } from "react";
-import styled from 'styled-components';
+import React, { Component } from "react"
+import styled from 'styled-components'
+import { Provider as UserProvider } from './contexts/User'
 import { Web3Context } from './Web3'
 import {
   Loader
@@ -12,16 +13,17 @@ import {
   Switch,
   Route,
   withRouter
-} from "react-router-dom";
+} from "react-router-dom"
 import Container from 'react-bootstrap/Container'
 import { Customer } from './Customer'
 import { Home } from './Home'
+import { User } from './User'
 import { Business } from './Business/index'
 import { Navigation } from './Navigation/'
-import "./App.css";
-// import Web3 from "web3";
+import "./App.css"
 
 const BusinessWithRouter = withRouter(Business)
+const UserWithRouter = withRouter(User)
 const routes = [{
   to: '/',
   content: 'home'
@@ -34,7 +36,8 @@ const routes = [{
 }]
 const StyleContainer = styled.div`
 .container {
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 .loader-text-centered {
   text-align: center;
@@ -42,52 +45,50 @@ const StyleContainer = styled.div`
 .loader-centered {
   margin: 0 auto;
 }
-`;
-class App extends Component {
-  state = {
-    storageValue: 0,
-    web3: null,
-    accounts: null,
-    contract: null
-  };
-
-  // componentDidMount = async () => {
-  // };
-  renderChildren() {
-    if (!this.context.web3) {
-      return (
-        <Box mt={3}>
-          <Loader>Loading Web3, accounts, and contract...</Loader>
-        </Box>
-      );
-    }
-    return (
-      <Switch>
-        <Route path="/customer/">
-          <Customer />
-        </Route>
-        <Route path="/business/">
-          <BusinessWithRouter />
-        </Route>
-        <Route path="/">
-          <Home />
-        </Route>
-      </Switch>
-    )
-  }
+`
+export class App extends Component {
   render() {
+    const { web3 } = this.context
     return (
-      <StyleContainer className="warranty-app">
-        <Router>
-          <Container>
-            <Navigation list={routes} user={true} />
-          </Container>
-          <Box className="container">
-            {this.renderChildren()}
+      <UserProvider>
+        <StyleContainer className="warranty-app">
+          <Router>
+            <Container>
+              <Navigation list={routes} user={true} />
+            </Container>
+            <Box mt={3} className="container">
+              {renderChildren(web3)}
+            </Box>
+          </Router>
+        </StyleContainer>
+      </UserProvider>
+    )
+
+    function renderChildren(web3) {
+      if (!web3) {
+        return (
+          <Box mt={3}>
+            <Loader>Loading Web3, accounts, and contract...</Loader>
           </Box>
-        </Router>
-      </StyleContainer>
-    );
+        );
+      }
+      return (
+        <Switch>
+          <Route path="/customer/">
+            <Customer />
+          </Route>
+          <Route path="/business/">
+            <BusinessWithRouter />
+          </Route>
+          <Route path="/user/">
+            <UserWithRouter />
+          </Route>
+          <Route path="/">
+            <Home />
+          </Route>
+        </Switch>
+      )
+    }
   }
 }
 

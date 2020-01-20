@@ -15,6 +15,7 @@ export async function getUserInfo() {
         // Get the contract instance.
         const networkId = await web3.eth.net.getId();
         const deployedNetwork = Warranty.networks[networkId];
+        const address = deployedNetwork && deployedNetwork.address
         const instance = new web3.eth.Contract(
             Warranty.abi,
             deployedNetwork && deployedNetwork.address,
@@ -24,6 +25,7 @@ export async function getUserInfo() {
         // example of interacting with the contract's methods.
         return {
             web3,
+            address,
             accounts,
             contract: instance
         }

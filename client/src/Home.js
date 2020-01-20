@@ -1,6 +1,9 @@
-import React from "react";
+import React from "react"
+import {
+  Text,
+} from 'rimble-ui'
 export const Home = () => {
-    return (
-        <p>home</p>
-    )
+  return (
+    <Text>Home</Text>
+  )
 }
