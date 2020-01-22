@@ -1,7 +1,9 @@
 import { toDate } from '../utils'
 import _ from 'lodash'
 import BigNumber from 'bignumber.js'
+
 const claims = {}
+
 export class Claim {
     constructor(id, web3, contract) {
         this.id = id
@@ -27,13 +29,14 @@ export class Claim {
         return this
     }
     update() {
-        delete claims[this.id]
+        deleteClaim(this.id)
         return this.clone().fetch()
     }
     clone() {
         return new Claim(this.id, this.web3, this.contract)
     }
     initialize(owner, claim) {
+        // mutate in place ok
         Object.assign(this, claim, {
             owner
         })
@@ -78,4 +81,8 @@ export class Claim {
             return memo
         }, [])
     }
+}
+
+export function deleteClaim(id) {
+    delete claims[id]
 }

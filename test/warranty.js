@@ -125,7 +125,7 @@ contract("Warranty", (accounts) => {
       expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(0)
     })
   })
-  describe('#fulfilled()', () => {
+  describe('#fulfillClaim()', () => {
     it('can be fullfilled by the warrantor', async () => {
       const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, {
         from: accounts[0],
@@ -133,11 +133,11 @@ contract("Warranty", (accounts) => {
       })
       const tokenId = getTokenId(createTx, accounts[1])
       await timeout(1000)
-      await throws(warranty.fulfill(accounts[1], tokenId, {
+      await throws(warranty.fulfillClaim(accounts[1], tokenId, {
         from: accounts[0],
         value: 8999
       }), "claim can only be fullfilled for the original agreed upon valuation")
-      await warranty.fulfill(accounts[1], tokenId, {
+      await warranty.fulfillClaim(accounts[1], tokenId, {
         from: accounts[0],
         value: 9000
       })
@@ -151,7 +151,7 @@ contract("Warranty", (accounts) => {
       })
       const tokenId1 = getTokenId(createTx1, accounts[1])
       await timeout(1000)
-      await warranty.fulfill(accounts[1], tokenId1, {
+      await warranty.fulfillClaim(accounts[1], tokenId1, {
         from: accounts[0],
         value: 18000
       })
@@ -165,7 +165,7 @@ contract("Warranty", (accounts) => {
       const tokenId2 = getTokenId(createTx2, accounts[1])
       await timeout(1000)
       // sending zero value
-      await warranty.fulfill(accounts[1], tokenId2, {
+      await warranty.fulfillClaim(accounts[1], tokenId2, {
         from: accounts[0],
         value: 0
       })

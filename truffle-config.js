@@ -16,7 +16,7 @@ module.exports = {
       network_id: "*",
       host: "127.0.0.1",
       blockTime: 1,
-      gas: 6721975,
+      gas: 9721975,
       websockets: true
     },
     test: {
@@ -24,11 +24,17 @@ module.exports = {
       network_id: "*",
       host: "127.0.0.1",
       blockTime: 1,
-      gas: 6721975,
+      gas: 9721975,
       websockets: true
     }
   },
   mocha: {
     useColors: true
+  },
+  solc: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
   }
 };

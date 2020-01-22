@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { App } from './App';
-import { Web3Context, getUserInfo } from './Web3'
+import { App } from './containers/App';
+import { Web3Context, getUserInfo } from './contexts/Web3'
 import * as serviceWorker from './serviceWorker';
 
 render({})
