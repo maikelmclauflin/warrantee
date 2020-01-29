@@ -5,13 +5,23 @@ import {
   Button
 } from 'rimble-ui'
 import { Link } from 'components/Link'
-const texts = {
-  create: 'Create a new claim',
-  fund: 'Fund a claim',
+const categories = {
+  customer: {
+    create: 'Create a new claim',
+    fund: 'Fund a claim',
+    sell: 'Sell a claim',
+  },
+  business: {
+    create: 'Create a new claim',
+    fund: 'Fund a claim',
+    guarantee: 'Guarantee a claim',
+    transfer: 'Transfer a claim',
+  },
 }
 export const LinkedActions = ({ match, list }) => {
   const actions = []
   const keys = []
+  const texts = categories[list]
   for (let key in texts) {
     if (match && match.path.includes(`/${key}/`)) {
       continue

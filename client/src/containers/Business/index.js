@@ -7,10 +7,12 @@ import {
   Route
 } from 'react-router-dom'
 import { CreateWarranty } from 'components/CreateWarranty'
-import { FundWarranties } from './FundWarranties'
+import { FundWarranty } from 'components/FundWarranty'
+import { GuaranteeWarranty } from 'components/GuaranteeWarranty'
 import { LinkedActions } from 'components/LinkedActions'
 
 const PerWarrantyWithRouter = withRouter(PerWarranty)
+const FundWarrantyWithRouter = withRouter(FundWarranty)
 const DashboardWithRouter = withRouter(Dashboard)
 const LinkedActionsWithRouter = withRouter(LinkedActions)
 
@@ -26,9 +28,17 @@ export class Business extends Component {
           {linked}
           <CreateWarranty guarantee={true} />
         </Route>
+        <Route path={path + 'fund/:id/'}>
+          {linked}
+          <FundWarrantyWithRouter />
+        </Route>
         <Route path={path + 'fund/'}>
           {linked}
-          <FundWarranties />
+          <FundWarrantyWithRouter />
+        </Route>
+        <Route path={path + 'guarantee/'}>
+          {linked}
+          <GuaranteeWarranty />
         </Route>
         <Route path={path + 'warranty/:id/'}>
           {linked}

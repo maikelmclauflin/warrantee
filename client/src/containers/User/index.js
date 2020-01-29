@@ -16,10 +16,11 @@ import { ignoreReject } from "utils";
 export class User extends Processor {
   processorMethod = 'releaseFunds'
   async releaseFunds({ web3, contract, selectedAddress, inputs, }) {
-    await ignoreReject(async () => {
+    return ignoreReject(async () => {
       await contract.methods.releaseTo(inputs.address, web3.utils.toWei(inputs.amount, 'ether')).send({
         from: selectedAddress,
       })
+      return true
     })
   }
   render() {
@@ -30,8 +31,8 @@ export class User extends Processor {
             <Form defaultInputs={{
               address: selectedAddress,
               amount: web3.utils.fromWei(amount.toString(), 'ether'),
-            }} onSubmit={async (inputs) => {
-              this.process({ web3, contract, selectedAddress, inputs, })
+            }} onSubmit={(inputs) => {
+              return this.process({ web3, contract, selectedAddress, inputs, })
             }}>
               <Release processing={this.state.processing} />
             </Form>

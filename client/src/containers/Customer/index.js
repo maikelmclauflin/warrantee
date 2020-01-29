@@ -7,6 +7,7 @@ import {
 import { Dashboard } from './Dashboard'
 import { LinkedActions } from 'components/LinkedActions'
 import { CreateWarranty } from 'components/CreateWarranty'
+import { FundWarranty } from 'components/FundWarranty'
 
 const DashboardWithRouter = withRouter(Dashboard)
 const LinkedActionsWithRouter = withRouter(LinkedActions)
@@ -20,6 +21,10 @@ export const Customer = (props) => {
       <Route path={path + 'create/'}>
         {linked}
         <CreateWarranty guarantee={false} />
+      </Route>
+      <Route path={path + 'fund/'}>
+        {linked}
+        <FundWarranty />
       </Route>
       <Route>
         {linked}

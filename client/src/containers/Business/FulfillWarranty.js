@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js'
 import { Processor } from 'components/Processor'
 import { Text } from 'components/Text'
 import { Form, FormContext } from 'components/Form'
-import { ignoreReject, addressZero } from 'utils'
+import { ignoreReject, addressZero, toDate } from 'utils'
 import {
   Button,
   Flex,
@@ -13,27 +13,28 @@ import {
   Loader as RimbleLoader,
   Text as RimbleText
 } from 'rimble-ui'
-import { Redirect } from 'react-router-dom'
+// import { Redirect } from 'react-router-dom'
 import { Progress } from 'components/Progress'
 import { ClaimContext } from 'contexts/Claim'
 import { fulfill as fulfillSchema } from 'schemas/'
 export class FulfillWarranty extends Processor {
   processorMethod = 'fulfill'
   onSubmit(inputs) {
-    this.process(inputs)
+    return this.process(inputs)
   }
   async fulfill(inputs) {
     const { context } = this
     const { contract, claim, web3 } = context
     const { toWei } = web3.utils
     const { methods, givenProvider } = contract
-    await ignoreReject(async () => {
+    return ignoreReject(async () => {
       await methods.fulfillClaim(inputs.address || addressZero, claim.id).send({
         from: givenProvider.selectedAddress,
         // excess eth is credited to sender
         value: toWei(inputs.value, 'ether'),
       })
       await context.updateClaim()
+      return true
     })
   }
   computeNeededValue() {
@@ -46,7 +47,7 @@ export class FulfillWarranty extends Processor {
     const { match } = props
     const { claim } = context
     const { id } = match.params
-    const { error, processing, processed } = state
+    const { error, processing } = state
     return (
       <Box my={3}>
         <Form
@@ -58,8 +59,8 @@ export class FulfillWarranty extends Processor {
               <Text title="Action">Fulfillment</Text>
               <Text title="ID">{id}</Text>
               <Text title="Owner">{claim.owner}</Text>
-              <Text title="Activated At">{claim.activatedTime()}</Text>
-              <Text title="Expires At">{claim.expiredTime()}</Text>
+              <Text title="Activated At">{toDate(claim.activatedTime())}</Text>
+              <Text title="Expires At">{toDate(claim.expiredTime())}</Text>
               <Text title="Progress"><Progress claim={claim} /></Text>
               <Flex mt={3} mx={-3}>
                 <Box width={[1, 1, 1 / 2]}>
@@ -91,7 +92,7 @@ export class FulfillWarranty extends Processor {
                 Fulfill Warranty&nbsp;{processing ? <RimbleLoader color="white" /> : []}
               </Button>
               <RimbleText>{error ? error.toString() : []}</RimbleText>
-              {(processed && !error) ? <Redirect to=".." /> : []}
+              {/* {(processed && !error) ? <Redirect to=".." /> : []} */}
             </>
           )}
           </FormContext.Consumer>

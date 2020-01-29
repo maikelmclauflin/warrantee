@@ -2,10 +2,15 @@ import BigNumber from 'bignumber.js'
 import joi from './extended'
 
 export const create = joi.object().keys({
-  owner: joi.string().required(),
+  warrantee: joi.string().required(),
+  warrantor: joi.string().required(),
   valuation: joi.bigNumber().required(),
   value: joi.bigNumber().required(),
-  expiresAfter: joi.bigNumber().required().greaterThanOrEqualTo(30),
+  expiresAfter: joi.bigNumber()
+    .required()
+    .greaterThanOrEqualTo(60)
+    .lessThan(new BigNumber(1000000000000))
+    .decription('number of seconds until the claim expires'),
 }).required()
 
 export const deredeem = joi.object().keys({
@@ -21,4 +26,14 @@ export const fulfill = joi.object().keys({
 export const fund = joi.object().keys({
   id: joi.bigNumber().required().greaterThanOrEqualTo(0),
   value: joi.bigNumber().required().greaterThanOrEqualTo((new BigNumber(1)).dividedBy(1e18)),
+}).required()
+
+export const guarantee = joi.object().keys({
+  id: joi.bigNumber().required().greaterThanOrEqualTo(0),
+  value: joi.bigNumber().required().greaterThanOrEqualTo(0),
+}).required()
+
+export const transfer = joi.object().keys({
+  id: joi.bigNumber().required().greaterThanOrEqualTo(0),
+  value: joi.bigNumber().required().greaterThanOrEqualTo(0),
 }).required()

@@ -8,72 +8,87 @@ import {
   Button,
   Loader as RimbleLoader
 } from 'rimble-ui'
+import { Helmet } from 'react-helmet'
 import {
   Form,
   FormContext
 } from 'components/Form'
-import { fund as fundSchema } from 'schemas'
+import { transfer as transferSchema } from 'schemas'
 import { Web3Context } from 'contexts/Web3'
 import { ignoreReject } from 'utils'
 import { Processor } from 'components/Processor'
 import { deleteClaim } from 'model/Claim'
 
-export class FundWarranties extends Processor {
-  processorMethod = 'fund'
+export class PostWarranty extends Processor {
+  processorMethod = 'post'
+  toastConfig = {
+    processing: () => ({ message: 'Posting Claim...' }),
+    success: () => ({ message: 'Claim Available for Backing' }),
+    failure: (error) => ({
+      message: 'Unable to Post Claim',
+      options: {
+        variant: 'failure',
+        secondaryMessage: error.toString(),
+      }
+    }),
+  }
   onSubmit(inputs) {
     return this.process(inputs)
   }
-  async fund(inputs) {
+  async transfer(inputs) {
     const { context } = this
     const { contract, web3 } = context
     const { toWei } = web3.utils
     const { selectedAddress } = web3.givenProvider
     const { methods } = contract
     const { id, value } = inputs
-    console.log(value)
-    await ignoreReject(async () => {
-      deleteClaim(id)
-      await methods.guaranteeClaim(id).send({
+    return ignoreReject(async () => {
+      deleteClaim(id) // from cache
+      await methods.postClaim(id).send({
         from: selectedAddress,
         value: toWei(value, 'ether'),
       })
+      return true
     })
   }
   render() {
-    const { processing, error } = this.state
+    const { props, state, onSubmit } = this
+    const { match = {} } = props
+    const { params = {} } = match
+    const { id } = params
+    const { processing, error } = state
     return (
       <Card p={3} mt={3}>
-        {this.toastMessage({
-          message: "Claiming warrantor status...",
-          options: {
-            variant: "processing"
-          }
-        })}
-        <Form onSubmit={this.onSubmit.bind(this)}
-          validation={fundSchema}
+        {this.toastMessage()}
+        <Helmet>
+          <title>Post Claim for Transfer</title>
+        </Helmet>
+        <Form onSubmit={onSubmit.bind(this)}
+          validation={transferSchema}
           defaultInputs={{
+            id,
             value: '0',
           }}>
-          <Flex mx={3} flexWrap="wrap">
-            <h3>Fund a Claim</h3>
+          <Flex mx={3} flexWrap='wrap'>
+            <h3>Post a Claim for Transfer</h3>
           </Flex>
-          <FormContext.Consumer>{({ onChange, inputs, valid, validateds }) => (console.log(validateds) ||
-            <Flex mt={3} flexWrap="wrap">
+          <FormContext.Consumer>{({ onChange, inputs, valid, validateds }) => (
+            <Flex mt={3} flexWrap='wrap'>
               <Box width={[1, 1, 1 / 2]} px={3}>
-                <Field label="ID to guarantee" width={1} validated={validateds.id}>
+                <Field label='ID to guarantee' width={1} validated={validateds.id}>
                   <Input
                     width={1}
-                    type="number"
+                    type='number'
                     required={true}
                     value={inputs.id || ''}
                     onChange={(e) => onChange('id', e)} />
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3}>
-                <Field label="Value to add in ether" width={1} validated={validateds.value}>
+                <Field label='Value to add in ether' width={1} validated={validateds.value}>
                   <Input
                     width={1}
-                    type="number"
+                    type='number'
                     required={true}
                     value={inputs.value || ''}
                     onChange={(e) => onChange('value', e)} />
@@ -81,9 +96,9 @@ export class FundWarranties extends Processor {
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3} my={3}>
                 <Button
-                  type="submit"
+                  type='submit'
                   disabled={processing || !valid}>
-                  Fund Claim&nbsp;{processing ? <RimbleLoader color="white" /> : []}
+                  Post Claim for Transfer&nbsp;{processing ? <RimbleLoader color='white' /> : []}
                 </Button>
               </Box>
               {error ? <Box width={1} px={3} my={3}>
@@ -97,4 +112,4 @@ export class FundWarranties extends Processor {
   }
 }
 
-FundWarranties.contextType = Web3Context
+PostWarranty.contextType = Web3Context

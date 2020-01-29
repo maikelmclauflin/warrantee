@@ -23,6 +23,7 @@ export async function getUserInfo() {
 
     // Set web3, accounts, and contract to the state, and then proceed with an
     // example of interacting with the contract's methods.
+    window.contract = instance
     return {
       web3,
       address,

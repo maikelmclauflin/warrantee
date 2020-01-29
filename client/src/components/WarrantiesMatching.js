@@ -21,7 +21,7 @@ export class WarrantiesMatching extends Processor {
   }
   acceptClaim(claim) {
     const { givenProvider } = this.context.contract
-    return claim.owner.toLowerCase() === givenProvider.selectedAddress.toLowerCase()
+    return claim.warrantee.toLowerCase() === givenProvider.selectedAddress.toLowerCase()
   }
   async getCachedPastEvents() {
     const { eventName, logs } = await this.getPastEvents()
@@ -91,7 +91,7 @@ export class WarrantiesMatching extends Processor {
       methods.balanceOf(givenProvider.selectedAddress).call(),
       this.getCachedPastEvents(),
     ])
-    // loop through log results to get ones that are still owned by owner
+    // loop through log results to get ones that are still owned by warrantee
     for (let i = 0; i < results.length; i += 1) {
       const { returnValues } = results[i]
       let claim = new Claim(returnValues.tokenId, web3, contract)

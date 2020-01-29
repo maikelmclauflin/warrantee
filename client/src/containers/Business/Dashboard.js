@@ -1,5 +1,7 @@
+import React from 'react'
 import { ShowWarranties } from 'components/ShowWarranties'
 import { Web3Context } from 'contexts/Web3'
+import { Helmet } from 'react-helmet'
 
 export class Dashboard extends ShowWarranties {
   acceptClaim(claim) {
@@ -21,6 +23,16 @@ export class Dashboard extends ShowWarranties {
         toBlock: 'latest',
       })
     }
+  }
+  renderLoaded() {
+    return (
+      <>
+        <Helmet>
+          <title>Dashboard</title>
+        </Helmet>
+        {super.renderLoaded()}
+      </>
+    )
   }
 }
 Dashboard.contextType = Web3Context

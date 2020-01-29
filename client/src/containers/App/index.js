@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import styled from 'styled-components'
 import { Provider as UserProvider } from 'contexts/User'
 import { Web3Context } from 'contexts/Web3'
+import { Helmet } from 'react-helmet'
 import {
   Box
 } from 'rimble-ui'
@@ -50,6 +51,9 @@ export class App extends Component {
     const { web3 } = this.context
     return (
       <UserProvider>
+        <Helmet
+          titleTemplate="Warrantee - %s"
+          defaultTitle="Warrantee" />
         <StyleContainer className="warranty-app">
           <Router>
             <Container>
