@@ -39,20 +39,24 @@ The first thing you may notice is that there is both a business and a customer t
   * utils/ReentrancyGuard.sol
   * lifecycle/Pausable.sol
 
+### User Stories
 
+product breaks + not reported -> nothing changes from real life. warranty expires
+product not broken + not reported -> nothing changes from real life. warranty expires
+product breaks + is reported -> business uses staked value and has to worry less about where to get funds since the amount that they accepted at the beginning already exists
 
+1) trustworthy customer + trustworthy company
+product not broken + reported (accidental? / stupid?) -> redemption can be reversed for small cost reputation of full cost to company taken into account by future warrantors.
 
-## TODO 
+2) non trustworthy customer + trustworthy company
+product not broken + reported (wasting company's time?) -> redemption can be reversed for small cost reputation of full cost to company taken into account by future warrantors.
 
-* [ ] home / search
-* [ ] browse w/ search page
-* [ ] item detail page
-    * [ ] details about item
-    * [ ] add to cart
-* [ ] cart / checkout page
-    * [ ] emits event of purchases
-    * [ ] prints the following keys
-    * [ ] shipping contract
+3) trustworthy customer + non trustworthy company
+product broken + reported (company refuses to fulfill) -> historical data will show reports not matching up with obsolecence schedule fairly quickly / customers will go with higher payout company.
 
-* [ ] internal use all products inventory page
-* [ ] update item inventory page
+4) non trustworthy customer + non trustworthy compnay
+collusion is expensive to do at scale. it is possible, but expensive. perhaps some sort of staking mechanism could be useful here something like what status has with their https://dap.ps/ app, which has highest ranked more easily able to lose votes.
+
+### Future Work
+
+With a few modifications a large amount of functionality could be added for erc20 tokens, as well as staking / escrow from both sides. Or, even cooler would be a new erc20 token (i know, i know, do we really need another?) that acts as a staking mechanism and burns tokens from the business side, while inflating them from the customer side? there's something interesting there.

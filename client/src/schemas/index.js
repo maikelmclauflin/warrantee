@@ -9,8 +9,7 @@ export const create = joi.object().keys({
   expiresAfter: joi.bigNumber()
     .required()
     .greaterThanOrEqualTo(60)
-    .lessThan(new BigNumber(1000000000000))
-    .decription('number of seconds until the claim expires'),
+    .lessThan(new BigNumber(1000000000000)),
 }).required()
 
 export const deredeem = joi.object().keys({

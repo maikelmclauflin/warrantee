@@ -2,11 +2,13 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@hapi/joi": "^17.0.2",
     "bignumber.js": "^9.0.0",
     "bootstrap": "^4.4.1",
     "drizzle": "^1.4.0",
+    "gh-pages": "^2.2.0",
     "immutability-helper": "^3.0.1",
     "joi-bignumber": "^13.4.0-beta.3",
     "lodash": "^4.17.15",
@@ -24,6 +26,8 @@
     "web3": "1.2.2"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
