@@ -3,6 +3,7 @@ import {
   Input,
   Button,
   Loader as RimbleLoader,
+  Textarea,
   Flex,
   Box,
   Card,
@@ -33,33 +34,29 @@ export class CreateWarranty extends Processor {
   }
   async create(inputs) {
     const { context, props } = this
-    const { value, valuation, warrantee, warrantor, expiresAfter } = inputs
+    const { value, valuation, warrantee, warrantor, expiresAfter, tokenURI = '', notes = '' } = inputs
     const { contract, web3 } = context
-    const { toWei } = web3.utils
+    const { toWei/*, asciiToHex*/ } = web3.utils
     const { givenProvider, methods } = contract
     const from = givenProvider.selectedAddress
-    const valueWei = toWei(value, 'ether')
     const valuationWei = toWei(valuation, 'ether')
     const options = {
       from,
-      value: valueWei,
     }
-    console.log({
-      from,
-      warrantee,
-      warrantor,
-      valuationWei,
-      valueWei,
-      expiresAfter
-    })
+    // console.log({
+    //   from,
+    //   warrantee,
+    //   warrantor,
+    //   valuationWei,
+    //   value,
+    //   expiresAfter
+    // })
     return ignoreReject(async () => {
-      console.log('props.guarantee', props.guarantee)
       if (props.guarantee) {
-        const result = await methods.createAndGuaranteeClaim(warrantee, valuationWei, expiresAfter).send(options)
-        console.log(result)
+        options.value = toWei(value, 'ether')
+        await methods.createAndGuaranteeClaim(warrantee, valuationWei, expiresAfter, tokenURI, notes).send(options)
       } else {
-        const result = await methods.createClaim(warrantee, warrantor, valuationWei, expiresAfter).send(options)
-        console.log(result)
+        await methods.createClaim(warrantee, warrantor, valuationWei, expiresAfter, tokenURI, notes).send(options)
       }
       return true
     })
@@ -72,11 +69,13 @@ export class CreateWarranty extends Processor {
     let warrantee = ''
     let warrantor = ''
     let disableWarrantor = false
+    let disableValue = false
     if (props.guarantee) {
       warrantor = givenProvider.selectedAddress
       disableWarrantor = true
     } else {
       warrantee = givenProvider.selectedAddress
+      disableValue = true
     }
     return (
       <Card px={3} py={3} mt={3}>
@@ -131,7 +130,7 @@ export class CreateWarranty extends Processor {
                   </Field>
                 </Box>
                 <Box width={[1, 1, 1 / 2]} title='The value to be attributed into the token when it is minted'>
-                  <Field label='Value' width={1} px={3}>
+                  {disableValue ? [] : <Field label='Value' width={1} px={3}>
                     <Input
                       type='text'
                       width={1}
@@ -139,7 +138,7 @@ export class CreateWarranty extends Processor {
                       value={inputs.value || ''}
                       placeholder='Starting value in ether (e.g. 1.2)'
                       onChange={(e) => onChange('value', e)} />
-                  </Field>
+                  </Field>}
                 </Box>
                 <Box width={[1, 1, 1 / 2]} title='The point in time when the token can be liquidated'>
                   <Field label='Expires After' width={1} px={3}>
@@ -150,6 +149,30 @@ export class CreateWarranty extends Processor {
                       value={inputs.expiresAfter || ''}
                       placeholder='time until warranty expires in seconds'
                       onChange={(e) => onChange('expiresAfter', e)} />
+                  </Field>
+                </Box>
+              </Flex>
+              <Flex flexWrap='wrap'>
+                <Box width={1} title='A uri to a json object that follows that erc721 spec: https://eips.ethereum.org/EIPS/eip-721'>
+                  <Field label='Token URI' width={1} px={3}>
+                    <Input
+                      type='text'
+                      width={1}
+                      value={inputs.tokenURI || ''}
+                      placeholder='http://token.uri.com/path/to.json'
+                      onChange={(e) => onChange('tokenURI', e)} />
+                  </Field>
+                </Box>
+              </Flex>
+              <Flex flexWrap='wrap'>
+                <Box width={1} title='The data to be stored in erc721 token itself'>
+                  <Field label='Notes' width={1} px={3}>
+                    <Textarea
+                      width={1}
+                      rows={4}
+                      value={inputs.notes || ''}
+                      placeholder='arbitrary data...'
+                      onChange={(e) => onChange('notes', e)} />
                   </Field>
                 </Box>
               </Flex>

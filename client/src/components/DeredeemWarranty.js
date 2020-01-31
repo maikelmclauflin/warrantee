@@ -1,7 +1,8 @@
 import React from 'react'
 import { Processor } from 'components/Processor'
 import { Text } from 'components/Text'
-import { ignoreReject, toDate } from 'utils'
+import { ignoreReject } from 'utils'
+import { ViewClaimMetadata } from 'components/ViewClaimMetadata'
 import { Form, FormContext } from 'components/Form'
 import {
   Flex,
@@ -12,8 +13,6 @@ import {
   Loader as RimbleLoader,
   Text as RimbleText
 } from 'rimble-ui'
-// import { Redirect } from 'react-router-dom'
-import { Progress } from 'components/Progress'
 import { ClaimContext } from 'contexts/Claim'
 import { deredeem as deredeemSchema } from 'schemas/'
 export class DeredeemWarranty extends Processor {
@@ -34,31 +33,28 @@ export class DeredeemWarranty extends Processor {
     })
   }
   render() {
-    const { props, state, context } = this
-    const { match } = props
+    const { state, context } = this
     const { claim } = context
-    const { id } = match.params
     const { error, processing } = state
     return (
       <Box mt={3}>
-        <Text title="Action">Redemption</Text>
-        <Text title="ID">{id}</Text>
-        <Text title="Owner">{claim.owner}</Text>
-        <Text title="Activated At">{toDate(claim.activatedTime())}</Text>
-        <Text title="Expires At">{toDate(claim.expiredTime())}</Text>
-        <Text title="Progress"><Progress claim={claim} /></Text>
-        <Form validation={deredeemSchema} onSubmit={this.onSubmit.bind(this)}>
-          <FormContext.Consumer>{(form) => (
-            <Flex mt={3} mx={-3}>
+        <Text title="Action">De-Redemption</Text>
+        <ViewClaimMetadata claim={claim} />
+        <Form validation={deredeemSchema} onSubmit={this.onSubmit.bind(this)} defaultInputs={{
+          delayTime: '0',
+          expiryTime: '0',
+        }}>
+          <FormContext.Consumer>{({ inputs, onChange }) => (
+            <Flex mt={3} mx={-3} flexWrap='wrap'>
               <Box width={[1, 1, 1 / 2]}>
                 <Field label="Delay Time (b)" width={1} px={3}>
                   <Input
                     width={1}
                     type="number"
-                    value={form.inputs.delayTime || ''}
+                    value={inputs.delayTime || ''}
                     required={true}
                     placeholder="Add seconds to the delay time"
-                    onChange={(e) => form.onChange("delayTime", e)} />
+                    onChange={(e) => onChange("delayTime", e)} />
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]}>
@@ -66,13 +62,13 @@ export class DeredeemWarranty extends Processor {
                   <Input
                     width={1}
                     type="number"
-                    value={form.inputs.expiryTime || ''}
+                    value={inputs.expiryTime || ''}
                     required={true}
                     placeholder="Add seconds to the expiry time"
-                    onChange={(e) => form.onChange("expiryTime", e)} />
+                    onChange={(e) => onChange("expiryTime", e)} />
                 </Field>
               </Box>
-              <Box width={1}>
+              <Box width={1} px={3}>
                 <Button
                   type="submit"
                   mt={3}
@@ -89,7 +85,7 @@ export class DeredeemWarranty extends Processor {
           </FormContext.Consumer>
         </Form>
         {/* {(processed && !error) ? <Redirect to=".." /> : []} */}
-      </Box>
+      </Box >
     )
   }
 }

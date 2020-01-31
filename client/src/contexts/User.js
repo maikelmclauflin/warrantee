@@ -56,7 +56,6 @@ export const Provider = (props) => {
         console.error(error)
       }
     }).on('data', (log) => {
-      console.log(log)
       if (log.topics.includes('0x7d016f8eb7665cdc83ca6289966f4c4c45a0b3e2add7bd7952ebb8aca1831d01')) {
         fetchBalance()
       }

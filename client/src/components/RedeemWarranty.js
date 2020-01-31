@@ -1,15 +1,15 @@
 import React from 'react'
 import { Processor } from 'components/Processor'
 import { Text } from 'components/Text'
-import { ignoreReject, toDate } from 'utils'
+import { ignoreReject } from 'utils'
 import {
   Button,
   Box,
   Loader as RimbleLoader,
   Text as RimbleText
 } from 'rimble-ui'
+import { ViewClaimMetadata } from 'components/ViewClaimMetadata'
 // import { Redirect } from 'react-router-dom'
-import { Progress } from 'components/Progress'
 import { ClaimContext } from 'contexts/Claim'
 export class RedeemWarranty extends Processor {
   processorMethod = 'redeem'
@@ -29,19 +29,13 @@ export class RedeemWarranty extends Processor {
     })
   }
   render() {
-    const { props, state, context } = this
-    const { match } = props
+    const { state, context } = this
     const { claim } = context
-    const { id } = match.params
     const { error, processing } = state
     return (
       <Box my={3}>
         <Text title="Action">Redemption</Text>
-        <Text title="ID">{id}</Text>
-        <Text title="Owner">{claim.owner}</Text>
-        <Text title="Activated At">{toDate(claim.activatedTime())}</Text>
-        <Text title="Expires At">{toDate(claim.expiredTime())}</Text>
-        <Text title="Progress"><Progress claim={claim} /></Text>
+        <ViewClaimMetadata claim={claim} />
         <Button
           mt={3}
           onClick={this.onClick.bind(this)}

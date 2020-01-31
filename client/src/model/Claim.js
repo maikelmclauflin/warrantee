@@ -73,7 +73,7 @@ export class Claim {
       return !this.terminated
     }
     if (key === 'fund') {
-      return this.expiredTime().times(1000).isGreaterThan(_.now())
+      return this.expiredTime().times(1000).isGreaterThan(_.now()) && !this.terminated
     }
   }
   states() {
@@ -82,6 +82,12 @@ export class Claim {
       return memo
     }, [])
   }
+}
+
+export function resetClaimCache() {
+  _.forOwn(claims, (claim, key) => {
+    delete claims[key]
+  })
 }
 
 export function deleteClaim(id) {

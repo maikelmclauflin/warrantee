@@ -80,6 +80,7 @@ export class FundWarranty extends Processor {
                     width={1}
                     type='number'
                     required={true}
+                    disabled={!!id}
                     value={inputs.id || ''}
                     onChange={(e) => onChange('id', e)} />
                 </Field>

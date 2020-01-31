@@ -22,7 +22,7 @@ contract("Warranty", (accounts) => {
   })
   describe('#createAndGuaranteeClaim()', () => {
     it("should fund a warranty", async () => {
-      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 3, {
+      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 3, "", "", {
         from: accounts[0],
         value: 5
       })
@@ -41,7 +41,7 @@ contract("Warranty", (accounts) => {
   })
   describe('#redeemClaim()', () => {
     it('should be able to mark a warranty as redeemed #redeemClaim()', async () => {
-      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 10, {
+      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 10, "", "", {
         from: accounts[0],
         value: 5
       })
@@ -59,7 +59,7 @@ contract("Warranty", (accounts) => {
   })
   describe('#terminateClaim()', () => {
     it('should decay the value returned to token holder linearly', async () => {
-      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 10, {
+      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 10, "", "", {
         from: accounts[0],
         value: 10
       })
@@ -77,7 +77,7 @@ contract("Warranty", (accounts) => {
     })
     it('unlocked funds can be released', async () => {
       const valuation = toWei('5', 'ether')
-      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], valuation, 10, {
+      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], valuation, 10, "", "", {
         from: accounts[0],
         value: toWei('0.5', "ether")
       })
@@ -111,7 +111,7 @@ contract("Warranty", (accounts) => {
       expect(balanceAfter1).to.be.bignumber.at.most(balance1.plus(toWei('0.3', 'ether')))
     })
     it('deposits the same amount in funds no matter how long after the claim expires', async () => {
-      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 2, {
+      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 2, "", "", {
         from: accounts[0],
         value: 1000
       })
@@ -127,7 +127,7 @@ contract("Warranty", (accounts) => {
   })
   describe('#fulfillClaim()', () => {
     it('can be fullfilled by the warrantor', async () => {
-      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, {
+      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, "", "", {
         from: accounts[0],
         value: 1000
       })
@@ -145,7 +145,7 @@ contract("Warranty", (accounts) => {
       expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(10000)
     })
     it('can be provided more than enough value', async () => {
-      const createTx1 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, {
+      const createTx1 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, "", "", {
         from: accounts[0],
         value: 1000
       })
@@ -158,7 +158,7 @@ contract("Warranty", (accounts) => {
       expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(9000)
       expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(10000)
       // create another one
-      const createTx2 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, {
+      const createTx2 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, "", "", {
         from: accounts[0],
         value: 1000
       })
@@ -171,6 +171,42 @@ contract("Warranty", (accounts) => {
       })
       expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(0)
       expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(20000)
+    })
+  })
+  describe('#createClaim()', () => {
+    it('can just create a claim to be claimed later', async () => {
+      const createTx1 = await warranty.createClaim(accounts[1], accounts[0], 10000, 60, "", "", {
+        from: accounts[1]
+      })
+      const tokenId1 = getTokenId(createTx1, accounts[1])
+      await timeout(1000)
+      await warranty.guaranteeClaim(tokenId1, {
+        from: accounts[0],
+        value: 1000,
+      })
+      const claim = await warranty._claims(tokenId1)
+      expect(claim.value).to.be.bignumber.equal(1000)
+      // expect(await warranty.balance(accounts[0]))
+      // await warranty.fulfillClaim(accounts[1], tokenId1, {
+      //   from: accounts[0],
+      //   value: 18000
+      // })
+      // expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(9000)
+      // expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(10000)
+      // // create another one
+      // const createTx2 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, "", "", {
+      //   from: accounts[0],
+      //   value: 1000
+      // })
+      // const tokenId2 = getTokenId(createTx2, accounts[1])
+      // await timeout(1000)
+      // // sending zero value
+      // await warranty.fulfillClaim(accounts[1], tokenId2, {
+      //   from: accounts[0],
+      //   value: 0
+      // })
+      // expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(0)
+      // expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(20000)
     })
   })
 })

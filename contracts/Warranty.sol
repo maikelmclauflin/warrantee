@@ -1,19 +1,24 @@
 pragma solidity >=0.4.21 <0.7.0;
 
-import "./Dependencies.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721Metadata.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/lifecycle/Pausable.sol";
 
 /**
  * @title A digital relationship between two entities
  * @author Michael McLaughlin
  * @notice You can use this contract for basic warranties
  */
-contract Warranty is Dependencies {
+contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
+  using SafeMath for uint256;
+  using Math for uint256;
+  using Address for address payable;
+
   mapping(uint256 => address) public _pendingTransfer;
   mapping(address => uint256) public _balances;
-
-  string public symbol;
-  string public name;
-  uint256 public decimals;
 
   Claim[] public _claims;
   struct Claim {
@@ -26,6 +31,7 @@ contract Warranty is Dependencies {
     bool redeemed;
     bool fulfilled;
     bool terminated;
+    string notes;
   }
 
   event BalanceUpdated(address indexed addr, uint256 amount, uint256 balance, bool negative);
@@ -35,6 +41,13 @@ contract Warranty is Dependencies {
   event Terminated(uint256 indexed tokenId);
   event Guaranteed(address indexed warrantor, uint256 indexed tokenId);
   event ClaimBalanceUpdated(uint256 indexed tokenId, uint256 value);
+
+  constructor()
+    ERC721Metadata("Warrantee", "WRNT")
+    ReentrancyGuard()
+    Pausable()
+    public
+  {}
 
   /**
    * @notice Allows only the two entities to run operation
@@ -118,15 +131,15 @@ contract Warranty is Dependencies {
   function isWarrantor(address account, uint256 tokenId) public view returns(bool matches) {
     return account == _claims[tokenId].warrantor;
   }
-  function timestamp() internal view returns(uint256 timestamp) {
+  function timestamp() internal view returns(uint256) {
     return block.timestamp;
   }
   /**
    * @notice Checks the balance of a given account
    * @param account address to check the balance credited by the contract
-   * @return balance as uint256 as the balance credited to the account and available for withdrawal
+   * @return amount as uint256 as the balance credited to the account and available for withdrawal
    */
-  function balance(address account) public view returns(uint256 balance) {
+  function balance(address account) public view returns(uint256 amount) {
     return _balances[account];
   }
   /**
@@ -205,13 +218,12 @@ contract Warranty is Dependencies {
     notTerminatedOnly(tokenId)
   {
     Claim storage claim = _claims[tokenId];
-    if (!claim.fulfilled) {
+    if (!claim.fulfilled && claim.value != 0) {
       // should only have value assigned, to be divii'd up if claim has not been fulfilled
-      uint256 value = claim.value;
       uint256 elapsed = claim.expiresAfter.sub(timeToClaimExpire(tokenId));
-      uint256 leftover = value.mul(claim.expiresAfter).sub(value.mul(elapsed)).div(claim.expiresAfter);
+      uint256 leftover = claim.value.mul(claim.expiresAfter).sub(claim.value.mul(elapsed)).div(claim.expiresAfter);
       credit(this.ownerOf(tokenId), leftover);
-      credit(claim.warrantor, value.sub(leftover));
+      credit(claim.warrantor, claim.value.sub(leftover));
     }
     claim.terminated = true;
     emit Terminated(tokenId);
@@ -260,14 +272,15 @@ contract Warranty is Dependencies {
   function createAndGuaranteeClaim(
     address payable warrantee,
     uint256 valuation,
-    uint256 expiresAfter
+    uint256 expiresAfter,
+    string memory tokenURI,
+    string memory notes
   )
     public
     payable
-    whenNotPaused
     returns(uint256)
   {
-    uint256 tokenId = createClaim(warrantee, msg.sender, valuation, expiresAfter);
+    uint256 tokenId = createClaim(warrantee, msg.sender, valuation, expiresAfter, tokenURI, notes);
     guaranteeClaim(tokenId);
     return tokenId;
   }
@@ -408,6 +421,18 @@ contract Warranty is Dependencies {
       extendClaimExpiration(tokenId, expiryTime, delayTime);
     }
   }
+  function refundClaim(uint256 tokenId)
+    public
+    whenNotPaused
+    warrantorOnly(tokenId)
+    // can be expired, just not terminated
+    notTerminatedOnly(tokenId)
+  {
+    Claim storage claim = _claims[tokenId];
+    credit(this.ownerOf(tokenId), claim.value);
+    claim.value = 0;
+    _terminateClaim(tokenId);
+  }
   /**
    * @notice Redeems a claim such that an account is notified that it needs to be fulfilled
    * if claim is accepted guarantee will get the funds defined in valuation back
@@ -448,7 +473,9 @@ contract Warranty is Dependencies {
     address warrantee,
     address warrantor,
     uint256 valuation,
-    uint256 expiresAfter
+    uint256 expiresAfter,
+    string memory tokenURI,
+    string memory notes
   )
     public
     whenNotPaused
@@ -456,9 +483,11 @@ contract Warranty is Dependencies {
   {
     uint256 tokenId = _claims.length;
     require(expiresAfter < 100000000000, "expires after value cannot be too large");
-    require(expiresAfter > 59, "expires after value cannot be too large");
-    // bypass onlyMinter role
-    require(safeMint(warrantee, tokenId, ""), "should be able to mint the token");
+    _safeMint(warrantee, tokenId);
+    if (bytes(tokenURI).length > 0) {
+      _setTokenURI(tokenId, tokenURI);
+    }
+    // metadata to associate with the id
     _claims.push(Claim({
       valuation: valuation,
       // set when the claim is guaranteed
@@ -470,7 +499,9 @@ contract Warranty is Dependencies {
       expiresAfter: expiresAfter,
       redeemed: false,
       fulfilled: false,
-      terminated: false
+      terminated: false,
+      // arbitrary data that must be on chain
+      notes: notes
     }));
     _postClaim(tokenId, warrantor);
     return tokenId;

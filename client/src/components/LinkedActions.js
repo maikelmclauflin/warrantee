@@ -8,17 +8,17 @@ import { Link } from 'components/Link'
 const categories = {
   customer: {
     create: 'Create a new claim',
-    fund: 'Fund a claim',
-    sell: 'Sell a claim',
+    // fund: 'Fund a claim',
+    // sell: 'Sell a claim',
   },
   business: {
     create: 'Create a new claim',
     fund: 'Fund a claim',
     guarantee: 'Guarantee a claim',
-    transfer: 'Transfer a claim',
+    // transfer: 'Transfer a claim',
   },
 }
-export const LinkedActions = ({ match, list }) => {
+export const LinkedActions = ({ match, list, level = '/' }) => {
   const actions = []
   const keys = []
   const texts = categories[list]
@@ -34,7 +34,7 @@ export const LinkedActions = ({ match, list }) => {
       <LinkedAction
         key={key}
         mr={(i < keys.length - 1) ? 3 : 0}
-        to={`/${list}/${key}/`}>
+        to={`${level}${list}/${key}/`}>
         {texts[key]}
       </LinkedAction>
     )

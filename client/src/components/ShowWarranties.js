@@ -7,12 +7,43 @@ import {
   Text
 } from 'rimble-ui'
 import { Progress } from 'components/Progress'
+import { resetClaimCache } from 'model/Claim'
 import {
   WarrantiesMatching,
   WarrantiesContext,
 } from 'components/WarrantiesMatching'
 
 export class ShowWarranties extends WarrantiesMatching {
+  subscription = null
+  async componentDidMount() {
+    const { web3, address } = this.context
+    this.subscription = web3.eth.subscribe('logs', {
+      address,
+      topics: ["0x9cb6070e4e6933d173cce37f39b46799295f49a5148d3713bbd9caab39b696b4"],
+    }, (error) => {
+      if (error) {
+        console.error(error)
+      }
+    }).on('data', (log) => {
+      resetClaimCache()
+      this.refreshWarranties()
+    })
+    return super.componentDidMount()
+  }
+  async componentWillUnmount() {
+    await new Promise((resolve, reject) => {
+      this.subscription.unsubscribe((error, success) => {
+        this.subscription = null
+        if (error) {
+          console.error(error)
+        }
+        if (!success) {
+          console.log('failed to unsubscribe', success)
+        }
+        resolve()
+      })
+    })
+  }
   renderLoaded() {
     const { context, props } = this
     const { web3 } = context
@@ -46,7 +77,6 @@ export class ShowWarranties extends WarrantiesMatching {
                 const activatedTime = new BigNumber(activatedAt)
                 const expiresAfterTime = new BigNumber(expiresAfter)
                 const expireTime = activatedTime.plus(expiresAfterTime)
-                console.log(claim)
                 const title = `${JSON.stringify({
                   id,
                   valuation,

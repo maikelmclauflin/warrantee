@@ -56,6 +56,7 @@ export class App extends Component {
           defaultTitle="Warrantee" />
         <StyleContainer className="warranty-app">
           <Router>
+            {/* basename={pkg.homepage}*/}
             <Container>
               <Navigation list={routes} user={true} />
             </Container>

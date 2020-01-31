@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js'
 import { Processor } from 'components/Processor'
 import { Text } from 'components/Text'
 import { Form, FormContext } from 'components/Form'
-import { ignoreReject, addressZero, toDate } from 'utils'
+import { ignoreReject, addressZero } from 'utils'
 import {
   Button,
   Flex,
@@ -13,8 +13,7 @@ import {
   Loader as RimbleLoader,
   Text as RimbleText
 } from 'rimble-ui'
-// import { Redirect } from 'react-router-dom'
-import { Progress } from 'components/Progress'
+import { ViewClaimMetadata } from 'components/ViewClaimMetadata'
 import { ClaimContext } from 'contexts/Claim'
 import { fulfill as fulfillSchema } from 'schemas/'
 export class FulfillWarranty extends Processor {
@@ -43,10 +42,8 @@ export class FulfillWarranty extends Processor {
     return fromWei((new BigNumber(claim.valuation)).minus(claim.value).toString(), 'ether')
   }
   render() {
-    const { props, state, context } = this
-    const { match } = props
+    const { state, context } = this
     const { claim } = context
-    const { id } = match.params
     const { error, processing } = state
     return (
       <Box my={3}>
@@ -57,11 +54,7 @@ export class FulfillWarranty extends Processor {
           <FormContext.Consumer>{(form) => (
             <>
               <Text title="Action">Fulfillment</Text>
-              <Text title="ID">{id}</Text>
-              <Text title="Owner">{claim.owner}</Text>
-              <Text title="Activated At">{toDate(claim.activatedTime())}</Text>
-              <Text title="Expires At">{toDate(claim.expiredTime())}</Text>
-              <Text title="Progress"><Progress claim={claim} /></Text>
+              <ViewClaimMetadata claim={claim} />
               <Flex mt={3} mx={-3}>
                 <Box width={[1, 1, 1 / 2]}>
                   <Field label="Required token owner" width={1} px={3}>

@@ -20,3 +20,12 @@ export const ignoreReject = async (fn) => {
 }
 
 export const addressZero = '0x0000000000000000000000000000000000000000'
+
+export const logListen = (web3, config, cb) => (
+  web3.eth.subscribe('logs', config, (error, log) => {
+    if (error) {
+      console.error(error)
+    }
+    console.log(log)
+  }).on('data', cb)
+)

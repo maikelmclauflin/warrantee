@@ -26,7 +26,7 @@ export class Form extends Component {
   componentDidUpdate(prevProps) {
     const { defaultInputs = {} } = this.props
     if (!_.isEqual(defaultInputs, prevProps.defaultInputs)) {
-      this.resetState(defaultInputs)
+      return this.resetState(defaultInputs)
     }
   }
   validate(inputs) {

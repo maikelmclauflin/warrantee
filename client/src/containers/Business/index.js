@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
 import { Dashboard } from './Dashboard'
-import { PerWarranty } from './PerWarranty'
 import {
   withRouter,
   Switch,
   Route
 } from 'react-router-dom'
+import { PerWarranty } from 'components/PerWarranty'
 import { CreateWarranty } from 'components/CreateWarranty'
 import { FundWarranty } from 'components/FundWarranty'
 import { GuaranteeWarranty } from 'components/GuaranteeWarranty'

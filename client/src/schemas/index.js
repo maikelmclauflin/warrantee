@@ -5,11 +5,13 @@ export const create = joi.object().keys({
   warrantee: joi.string().required(),
   warrantor: joi.string().required(),
   valuation: joi.bigNumber().required(),
-  value: joi.bigNumber().required(),
+  value: joi.bigNumber().optional(),
   expiresAfter: joi.bigNumber()
     .required()
     .greaterThanOrEqualTo(60)
     .lessThan(new BigNumber(1000000000000)),
+  notes: joi.string().optional(),
+  tokenURI: joi.string().optional(),
 }).required()
 
 export const deredeem = joi.object().keys({

@@ -105,6 +105,13 @@ export class WarrantiesMatching extends Processor {
     }
     return claims
   }
+  async refreshWarranties() {
+    const result = await this.loadWarranties()
+    this.setState(() => ({
+      result,
+    }))
+  }
+  // async loadWarranty() {}
   render() {
     const { result: claims } = this.state
     if (!claims) {
