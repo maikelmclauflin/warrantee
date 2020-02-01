@@ -100,8 +100,12 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
    * @notice Allows only non expired tokens to be operated upon
    * @param tokenId uint256 ID is the token in question
    */
-  modifier notExpireddOnly(uint256 tokenId) {
-    require(_claims[tokenId].activatedAt.add(delayTime).add(expiryTime) > timestamp(), "only non expired claims can use this method");
+  modifier notExpiredOnly(uint256 tokenId) {
+    require(
+      _claims[tokenId].activatedAt == 0 ||
+      _claims[tokenId].activatedAt.add(_claims[tokenId].delayTime).add(_claims[tokenId].expiresAfter) > timestamp(),
+      "only non expired claims can use this method"
+    );
     _;
   }
   /**
@@ -305,7 +309,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
   }
   function transferWarrantorship(uint256 tokenId, address account)
     public
-    notExpireddOnly(tokenId)
+    notExpiredOnly(tokenId)
     warranteeOnly(tokenId)
   {
     _activateClaim(tokenId);
