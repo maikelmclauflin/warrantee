@@ -37302,8 +37302,8 @@
         }
       },
       "links": {},
-      "address": "0x5d38A86247Dd4b697575967d3525092B813CAC30",
-      "transactionHash": "0xefcde2738c078fe7486bdf275b4c57bd3253534bc437fdf3432072d80011e8d9"
+      "address": "0xED0f812e854D093Ff49510e5c59809114D698196",
+      "transactionHash": "0x7f09c7da9f29fc95183ae35b668cc81b7985e5577a3fa8c1ff222220a6de0ed4"
     },
     "1580356740901": {
       "events": {
@@ -38599,7 +38599,7 @@
     }
   },
   "schemaVersion": "3.0.19",
-  "updatedAt": "2020-02-01T04:59:39.918Z",
+  "updatedAt": "2020-02-01T05:02:49.429Z",
   "networkType": "ethereum",
   "devdoc": {
     "author": "Michael McLaughlin",

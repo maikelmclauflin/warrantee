@@ -41,10 +41,10 @@ export class FundWarranty extends Processor {
     const { toWei } = web3.utils
     const { selectedAddress } = web3.givenProvider
     const { methods } = contract
-    const { id, value } = inputs
+    const { id, value, back } = inputs
     return ignoreReject(async () => {
       deleteClaim(id) // from cache
-      await methods.fundClaim(id).send({
+      await methods.fundClaim(id, back).send({
         from: selectedAddress,
         value: toWei(value, 'ether'),
       })
@@ -83,6 +83,16 @@ export class FundWarranty extends Processor {
                     disabled={!!id}
                     value={inputs.id || ''}
                     onChange={(e) => onChange('id', e)} />
+                </Field>
+              </Box>
+              <Box width={[1, 1, 1 / 2]} px={3}>
+                <Field label="Amount to back the claim with" width={1} validated={validateds.back}>
+                  <Input
+                    width={1}
+                    type="number"
+                    required={true}
+                    value={inputs.back || ''}
+                    onChange={(e) => onChange('back', e)} />
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3}>
