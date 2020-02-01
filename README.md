@@ -32,7 +32,7 @@ The first thing you may notice is that there is both a business and a customer t
 ### library used
 
 @openzepplin/contracts
-  * token/ERC721/ERC721Mintable.sol
+  * token/ERC721/ERC721Metadata.sol
   * math/SafeMath.sol
   * math/Math.sol
   * utils/Address.sol

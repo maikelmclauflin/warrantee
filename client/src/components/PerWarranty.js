@@ -30,13 +30,13 @@ export class PerWarranty extends LoadsWarranty {
   componentDidMount() {
     this.subscription = logListen(this.context.web3, {
       address: this.context.address,
-      topics: [
-        "0x9cb6070e4e6933d173cce37f39b46799295f49a5148d3713bbd9caab39b696b4",
-        "0xc708b61d056f0c33ad63ad27614b9476c96fd7c8553410c3c85be27cc5ae4b71",
-        "0x79ff72c889eb977f60e9db2618527ce958c1f2be891bb1fac455217c07d4f645",
-        "0x086c06b0f41de14dcd2062b4043c61c41fabf8b24e9ea76e5d08c56f7e8ecbce",
-        "0x9a9cad27a1bdce3d7cb0602aaf727dfaad03ba6524d9bca7b9615867fa6802b4"
-      ]
+      // topics: [
+      //   "0x9cb6070e4e6933d173cce37f39b46799295f49a5148d3713bbd9caab39b696b4",
+      //   "0xc708b61d056f0c33ad63ad27614b9476c96fd7c8553410c3c85be27cc5ae4b71",
+      //   "0x79ff72c889eb977f60e9db2618527ce958c1f2be891bb1fac455217c07d4f645",
+      //   "0x086c06b0f41de14dcd2062b4043c61c41fabf8b24e9ea76e5d08c56f7e8ecbce",
+      //   "0x9a9cad27a1bdce3d7cb0602aaf727dfaad03ba6524d9bca7b9615867fa6802b4"
+      // ]
     }, () => {
       this.updateClaim()
     })
