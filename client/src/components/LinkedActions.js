@@ -7,15 +7,15 @@ import {
 import { Link } from 'components/Link'
 const categories = {
   customer: {
-    create: 'Create a new claim',
-    // fund: 'Fund a claim',
-    // sell: 'Sell a claim',
+    create: 'Create',
+    // fund: 'Fund',
+    // sell: 'Sell',
   },
   business: {
-    create: 'Create a new claim',
-    fund: 'Fund a claim',
-    guarantee: 'Guarantee a claim',
-    // transfer: 'Transfer a claim',
+    create: 'Create',
+    fund: 'Fund',
+    guarantee: 'Guarantee',
+    // transfer: 'Transfer',
   },
 }
 export const LinkedActions = ({ match, list, level = '/' }) => {

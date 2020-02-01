@@ -75,6 +75,9 @@ export class Claim {
     if (key === 'fund') {
       return this.expiredTime().times(1000).isGreaterThan(_.now()) && !this.terminated
     }
+    if (key === 'transfer') {
+      return !this.terminated
+    }
   }
   states() {
     return ['terminated', 'fulfilled', 'redeemed'].reduce((memo, key) => {

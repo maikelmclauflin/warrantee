@@ -13,7 +13,7 @@ import {
   Form,
   FormContext
 } from 'components/Form'
-import { fund as fundSchema } from 'schemas'
+import { guarantee as guaranteeSchema } from 'schemas'
 import { Web3Context } from 'contexts/Web3'
 import { ignoreReject } from 'utils'
 import { Processor } from 'components/Processor'
@@ -41,10 +41,10 @@ export class GuaranteeWarranty extends Processor {
     const { toWei } = web3.utils
     const { selectedAddress } = web3.givenProvider
     const { methods } = contract
-    const { id, value } = inputs
+    const { id, value, back } = inputs
     return ignoreReject(async () => {
       deleteClaim(id) // from cache
-      await methods.guaranteeClaim(id).send({
+      await methods.guaranteeClaim(id, toWei(back, 'ether')).send({
         from: selectedAddress,
         value: toWei(value, 'ether'),
       })
@@ -60,7 +60,7 @@ export class GuaranteeWarranty extends Processor {
           <title>Guarantee Claim</title>
         </Helmet>
         <Form onSubmit={this.onSubmit.bind(this)}
-          validation={fundSchema}
+          validation={guaranteeSchema}
           defaultInputs={{
             value: '0',
           }}>
@@ -77,6 +77,16 @@ export class GuaranteeWarranty extends Processor {
                     required={true}
                     value={inputs.id || ''}
                     onChange={(e) => onChange('id', e)} />
+                </Field>
+              </Box>
+              <Box width={[1, 1, 1 / 2]} px={3}>
+                <Field label="Amount to back the claim with" width={1} validated={validateds.back}>
+                  <Input
+                    width={1}
+                    type="number"
+                    required={true}
+                    value={inputs.back || ''}
+                    onChange={(e) => onChange('back', e)} />
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3}>

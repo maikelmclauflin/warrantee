@@ -37,6 +37,7 @@ export class Form extends Component {
   }
   isValid(inputs) {
     const result = this.validate(inputs)
+    console.log(result.error)
     return !result.error
   }
 

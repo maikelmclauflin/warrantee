@@ -281,7 +281,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     returns(uint256)
   {
     uint256 tokenId = createClaim(warrantee, msg.sender, valuation, expiresAfter, tokenURI, notes);
-    guaranteeClaim(tokenId);
+    guaranteeClaim(tokenId, msg.value);
     return tokenId;
   }
   /**
@@ -320,7 +320,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
    * also useful when being sold a warranty by another warrantor or by the warrantee
    * @param tokenId uint256 targets a specific token
    */
-  function guaranteeClaim(uint256 tokenId)
+  function guaranteeClaim(uint256 tokenId, uint256 value)
     public
     payable
     whenNotPaused
@@ -333,18 +333,20 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
       if (claim.activatedAt != 0) {
         require(_pendingTransfer[tokenId] != address(0), "claim must be pending transfer");
         require(claim.warrantor != address(0), "claim must be guaranteed to have value");
-        require(msg.value >= claim.value, "claim must preserve currently backed value");
         credit(claim.warrantor, claim.value); // give back the value provided by previous warrantor
+        uint256 availableCredit = balance(msg.sender).add(msg.value);
+        require(availableCredit >= claim.value, "available credit must meet or exceed claim value");
+        require(value >= claim.value, "claim must preserve currently backed value");
         claim.value = 0; // reset value
-        _pendingTransfer[tokenId] = address(0);
       }
+      _pendingTransferClaim(tokenId, address(0));
       claim.warrantor = msg.sender;
       if (claim.activatedAt == 0) {
         claim.activatedAt = timestamp();
       }
       emit Guaranteed(msg.sender, tokenId);
     }
-    fundClaim(tokenId); // back claim with new value
+    fundClaim(tokenId, value); // back claim with new value
   }
   /**
    * @notice Posts a claim to be picked up "guaranteed" by another entity
@@ -358,7 +360,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     warranteeOrWarrantorOnly(tokenId)
   {
     require(_pendingTransfer[tokenId] == address(0), "only claims that are not being sold can be put up for sale");
-    _postClaim(tokenId, account);
+    _pendingTransferClaim(tokenId, account);
   }
   /**
    * @notice Un-posts a claim that was previously posted.
@@ -368,12 +370,12 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
   function depostClaim(uint256 tokenId)
     public
     whenNotPaused
-    warranteeOnly(tokenId)
+    warranteeOrWarrantorOnly(tokenId)
   {
-    require(_pendingTransfer[tokenId] != address(0), "only claims that are not being sold can be put up for sale");
-    _postClaim(tokenId, address(0));
+    require(_pendingTransfer[tokenId] != address(0), "only claims that are being sold can be deposted");
+    _pendingTransferClaim(tokenId, address(0));
   }
-  function _postClaim(uint256 tokenId, address account) internal {
+  function _pendingTransferClaim(uint256 tokenId, address account) internal {
     _pendingTransfer[tokenId] = account;
   }
   // anybody can add to a claim's value. value will only be accessable to the owner
@@ -384,13 +386,14 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
    * That's just confusing.
    * @param tokenId uint256 the token to be targeted
    */
-  function fundClaim(uint256 tokenId)
+  function fundClaim(uint256 tokenId, uint256 amount)
     public
     payable
-    whenNotPaused
     notTerminatedOnly(tokenId)
   {
-    creditClaim(tokenId, msg.value);
+    deposit(msg.sender);
+    creditClaim(tokenId, amount);
+    debit(msg.sender, amount);
   }
   function creditClaim(uint256 tokenId, uint256 value) internal {
     if (value != 0) {
@@ -503,7 +506,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
       // arbitrary data that must be on chain
       notes: notes
     }));
-    _postClaim(tokenId, warrantor);
+    _pendingTransferClaim(tokenId, warrantor);
     return tokenId;
   }
 

@@ -1,12 +1,15 @@
 import React from 'react'
+import _ from 'lodash'
 import { ShowWarranties } from 'components/ShowWarranties'
 import { Web3Context } from 'contexts/Web3'
 import { Helmet } from 'react-helmet'
 
 export class Dashboard extends ShowWarranties {
-  acceptClaim(claim) {
+  acceptClaim(claim, claims) {
     const { givenProvider } = this.context.contract
-    return claim.warrantor.toLowerCase() === givenProvider.selectedAddress.toLowerCase()
+    const { selectedAddress } = givenProvider
+    const { warrantor, id } = claim
+    return warrantor.toLowerCase() === selectedAddress.toLowerCase() && !_.find(claims, { id })
   }
   async getPastEvents() {
     const eventName = 'Guaranteed'

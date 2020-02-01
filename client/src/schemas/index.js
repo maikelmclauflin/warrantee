@@ -21,7 +21,7 @@ export const deredeem = joi.object().keys({
 
 export const fulfill = joi.object().keys({
   value: joi.bigNumber().required(),
-  address: joi.string(),
+  address: joi.string().min(1),
 }).required()
 
 export const fund = joi.object().keys({
@@ -31,10 +31,11 @@ export const fund = joi.object().keys({
 
 export const guarantee = joi.object().keys({
   id: joi.bigNumber().required().greaterThanOrEqualTo(0),
+  back: joi.bigNumber().required().greaterThanOrEqualTo(0),
   value: joi.bigNumber().required().greaterThanOrEqualTo(0),
 }).required()
 
-export const transfer = joi.object().keys({
+export const post = joi.object().keys({
   id: joi.bigNumber().required().greaterThanOrEqualTo(0),
-  value: joi.bigNumber().required().greaterThanOrEqualTo(0),
+  account: joi.string().min(1),
 }).required()

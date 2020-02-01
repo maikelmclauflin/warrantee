@@ -96,7 +96,7 @@ export class WarrantiesMatching extends Processor {
       const { returnValues } = results[i]
       let claim = new Claim(returnValues.tokenId, web3, contract)
       claim = await claim.fetch()
-      if (this.acceptClaim(claim)) {
+      if (this.acceptClaim(claim, claims)) {
         claims.push(claim)
         if (this.finishedAccepting(balanceOf, claims)) {
           break

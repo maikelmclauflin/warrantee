@@ -13,7 +13,7 @@ import {
   Form,
   FormContext
 } from 'components/Form'
-import { transfer as transferSchema } from 'schemas'
+import { post as postSchema } from 'schemas'
 import { Web3Context } from 'contexts/Web3'
 import { ignoreReject } from 'utils'
 import { Processor } from 'components/Processor'
@@ -35,19 +35,17 @@ export class PostWarranty extends Processor {
   onSubmit(inputs) {
     return this.process(inputs)
   }
-  async transfer(inputs) {
+  async post(inputs) {
     const { context } = this
     const { contract, web3 } = context
-    const { toWei } = web3.utils
-    const { selectedAddress } = web3.givenProvider
     const { methods } = contract
-    const { id, value } = inputs
+    const { id, account } = inputs
+    const { selectedAddress } = web3.givenProvider
     return ignoreReject(async () => {
-      deleteClaim(id) // from cache
-      await methods.postClaim(id).send({
+      await methods.postClaim(id, account).send({
         from: selectedAddress,
-        value: toWei(value, 'ether'),
       })
+      deleteClaim(id) // from cache
       return true
     })
   }
@@ -64,10 +62,10 @@ export class PostWarranty extends Processor {
           <title>Post Claim for Transfer</title>
         </Helmet>
         <Form onSubmit={onSubmit.bind(this)}
-          validation={transferSchema}
+          validation={postSchema}
           defaultInputs={{
             id,
-            value: '0',
+            account: '',
           }}>
           <Flex mx={3} flexWrap='wrap'>
             <h3>Post a Claim for Transfer</h3>
@@ -85,13 +83,13 @@ export class PostWarranty extends Processor {
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3}>
-                <Field label='Value to add in ether' width={1} validated={validateds.value}>
+                <Field label='Account that can purchase the claim' width={1} validated={validateds.account}>
                   <Input
                     width={1}
-                    type='number'
+                    type='text'
                     required={true}
-                    value={inputs.value || ''}
-                    onChange={(e) => onChange('value', e)} />
+                    value={inputs.account || ''}
+                    onChange={(e) => onChange('account', e)} />
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3} my={3}>

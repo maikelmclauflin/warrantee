@@ -57,6 +57,39 @@ contract("Warranty", (accounts) => {
       expect(claim.fulfilled).to.be.equal(false)
     })
   })
+  describe('#guaranteeClaim()', () => {
+    it('should be able to claim ownership over a token, only if the ether is replaced', async () => {
+      const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 10000, "", "", {
+        from: accounts[0],
+        value: 10
+      })
+      const tokenId = getTokenId(createTx, accounts[1])
+
+      let claim = await warranty._claims(tokenId)
+      expect(claim.warrantor).to.be.equal(accounts[0])
+
+      await warranty.postClaim(tokenId, accounts[2], {
+        from: accounts[0]
+      })
+
+      claim = await warranty._claims(tokenId)
+      expect(claim.warrantor).to.be.equal(accounts[0])
+      transferringTo = await warranty._pendingTransfers(tokenId)
+      expect(transferringTo).to.be.equal(accounts[2])
+
+      await throws(warranty.guaranteeClaim(tokenId, 1, {
+        from: accounts[2],
+        value: 1
+      }), "claim must preserve currently backed value")
+      await warranty.guaranteeClaim(tokenId, 10, {
+        from: accounts[2],
+        value: 10
+      })
+
+      claim = await warranty._claims(tokenId)
+      expect(claim.warrantor).to.be.equal(accounts[2])
+    })
+  })
   describe('#terminateClaim()', () => {
     it('should decay the value returned to token holder linearly', async () => {
       const createTx = await warranty.createAndGuaranteeClaim(accounts[1], 50, 10, "", "", {
@@ -180,33 +213,23 @@ contract("Warranty", (accounts) => {
       })
       const tokenId1 = getTokenId(createTx1, accounts[1])
       await timeout(1000)
-      await warranty.guaranteeClaim(tokenId1, {
+      await warranty.guaranteeClaim(tokenId1, 1000, {
         from: accounts[0],
         value: 1000,
       })
       const claim = await warranty._claims(tokenId1)
       expect(claim.value).to.be.bignumber.equal(1000)
-      // expect(await warranty.balance(accounts[0]))
-      // await warranty.fulfillClaim(accounts[1], tokenId1, {
-      //   from: accounts[0],
-      //   value: 18000
-      // })
-      // expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(9000)
-      // expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(10000)
-      // // create another one
-      // const createTx2 = await warranty.createAndGuaranteeClaim(accounts[1], 10000, 60, "", "", {
-      //   from: accounts[0],
-      //   value: 1000
-      // })
-      // const tokenId2 = getTokenId(createTx2, accounts[1])
-      // await timeout(1000)
-      // // sending zero value
-      // await warranty.fulfillClaim(accounts[1], tokenId2, {
-      //   from: accounts[0],
-      //   value: 0
-      // })
-      // expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(0)
-      // expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(20000)
+    })
+  })
+  describe('#fallback()', () => {
+    it('just deposits whatever eth it receives', async () => {
+      await web3.eth.sendTransaction({
+        from: accounts[0],
+        to: warranty.address,
+        value: 10001,
+        data: "",
+      })
+      expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(10001)
     })
   })
 })

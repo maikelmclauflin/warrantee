@@ -9,6 +9,7 @@ import { RedeemWarranty } from 'components/RedeemWarranty'
 import { DeredeemWarranty } from 'components/DeredeemWarranty'
 import { FulfillWarranty } from 'components/FulfillWarranty'
 import { FundWarranty } from 'components/FundWarranty'
+import { PostWarranty } from 'components/PostWarranty'
 import update from 'immutability-helper'
 import {
   withRouter,
@@ -22,6 +23,7 @@ const TerminateWarrantyWithRouter = withRouter(TerminateWarranty)
 const RedeemWarrantyWithRouter = withRouter(RedeemWarranty)
 const DeredeemWarrantyWithRouter = withRouter(DeredeemWarranty)
 const FulfillWarrantyWithRouter = withRouter(FulfillWarranty)
+const PostWarrantyWithRouter = withRouter(PostWarranty)
 
 export class PerWarranty extends LoadsWarranty {
   subscription = null
@@ -36,7 +38,6 @@ export class PerWarranty extends LoadsWarranty {
         "0x9a9cad27a1bdce3d7cb0602aaf727dfaad03ba6524d9bca7b9615867fa6802b4"
       ]
     }, () => {
-      console.log('hit')
       this.updateClaim()
     })
     return super.componentDidMount()
@@ -80,6 +81,9 @@ export class PerWarranty extends LoadsWarranty {
           </Route>
           <Route path={path + "fulfill/"}>
             <FulfillWarrantyWithRouter />
+          </Route>
+          <Route path={path + "transfer/"}>
+            <PostWarrantyWithRouter />
           </Route>
           <Route>
             <ViewWarrantyWithRouter claim={claim} level="../../" />

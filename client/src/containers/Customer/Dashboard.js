@@ -9,7 +9,7 @@ export class Dashboard extends ShowWarranties {
     return claim.warrantee.toLowerCase() === givenProvider.selectedAddress.toLowerCase()
   }
   async getPastEvents() {
-    const eventName = 'Guaranteed'
+    const eventName = 'Transfer'
     const { contract } = this.context
     const { givenProvider } = contract
     const { selectedAddress } = givenProvider
