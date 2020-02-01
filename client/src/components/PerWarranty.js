@@ -10,6 +10,7 @@ import { DeredeemWarranty } from 'components/DeredeemWarranty'
 import { FulfillWarranty } from 'components/FulfillWarranty'
 import { FundWarranty } from 'components/FundWarranty'
 import { PostWarranty } from 'components/PostWarranty'
+import { ChangeWarrantor } from 'components/ChangeWarrantor'
 import update from 'immutability-helper'
 import {
   withRouter,
@@ -24,6 +25,7 @@ const RedeemWarrantyWithRouter = withRouter(RedeemWarranty)
 const DeredeemWarrantyWithRouter = withRouter(DeredeemWarranty)
 const FulfillWarrantyWithRouter = withRouter(FulfillWarranty)
 const PostWarrantyWithRouter = withRouter(PostWarranty)
+const ChangeWarrantorWithRouter = withRouter(ChangeWarrantor)
 
 export class PerWarranty extends LoadsWarranty {
   subscription = null
@@ -84,6 +86,9 @@ export class PerWarranty extends LoadsWarranty {
           </Route>
           <Route path={path + "transfer/"}>
             <PostWarrantyWithRouter />
+          </Route>
+          <Route path={path + "changewarrantor/"}>
+            <ChangeWarrantorWithRouter />
           </Route>
           <Route>
             <ViewWarrantyWithRouter claim={claim} level="../../" />

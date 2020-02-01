@@ -8,7 +8,6 @@ import {
 import { PerWarranty } from 'components/PerWarranty'
 import { CreateWarranty } from 'components/CreateWarranty'
 import { FundWarranty } from 'components/FundWarranty'
-import { GuaranteeWarranty } from 'components/GuaranteeWarranty'
 import { LinkedActions } from 'components/LinkedActions'
 
 const PerWarrantyWithRouter = withRouter(PerWarranty)
@@ -26,7 +25,7 @@ export class Business extends Component {
       <Switch>
         <Route path={path + 'create/'}>
           {linked}
-          <CreateWarranty guarantee={true} />
+          <CreateWarranty />
         </Route>
         <Route path={path + 'fund/:id/'}>
           {linked}
@@ -35,10 +34,6 @@ export class Business extends Component {
         <Route path={path + 'fund/'}>
           {linked}
           <FundWarrantyWithRouter />
-        </Route>
-        <Route path={path + 'guarantee/'}>
-          {linked}
-          <GuaranteeWarranty />
         </Route>
         <Route path={path + 'warranty/:id/'}>
           {linked}

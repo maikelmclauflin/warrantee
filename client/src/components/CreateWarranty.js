@@ -33,50 +33,37 @@ export class CreateWarranty extends Processor {
     }),
   }
   async create(inputs) {
-    const { context, props } = this
+    const { context } = this
     const { value, valuation, warrantee, warrantor, expiresAfter, tokenURI = '', notes = '' } = inputs
     const { contract, web3 } = context
     const { toWei/*, asciiToHex*/ } = web3.utils
     const { givenProvider, methods } = contract
     const from = givenProvider.selectedAddress
     const valuationWei = toWei(valuation, 'ether')
-    const options = {
-      from,
-    }
-    // console.log({
-    //   from,
-    //   warrantee,
-    //   warrantor,
-    //   valuationWei,
-    //   value,
-    //   expiresAfter
-    // })
     return ignoreReject(async () => {
-      if (props.guarantee) {
-        options.value = toWei(value, 'ether')
-        await methods.createAndGuaranteeClaim(warrantee, valuationWei, expiresAfter, tokenURI, notes).send(options)
-      } else {
-        await methods.createClaim(warrantee, warrantor, valuationWei, expiresAfter, tokenURI, notes).send(options)
-      }
+      await methods.createAndFundClaim(warrantee, warrantor, valuationWei, expiresAfter, tokenURI, notes).send({
+        value: toWei(value, 'ether'),
+        from,
+      })
       return true
     })
   }
   render() {
-    const { state, props, context, onSubmit } = this
+    const { state, context, onSubmit } = this
     const { processing } = state
     const { contract } = context
     const { givenProvider } = contract
-    let warrantee = ''
+    let warrantee = givenProvider.selectedAddress
     let warrantor = ''
     let disableWarrantor = false
     let disableValue = false
-    if (props.guarantee) {
-      warrantor = givenProvider.selectedAddress
-      disableWarrantor = true
-    } else {
-      warrantee = givenProvider.selectedAddress
-      disableValue = true
-    }
+    // if (props.guarantee) {
+    //   warrantor = givenProvider.selectedAddress
+    //   disableWarrantor = true
+    // } else {
+    // warrantee = givenProvider.selectedAddress
+    // disableValue = true
+    // }
     return (
       <Card px={3} py={3} mt={3}>
         {this.toastMessage()}

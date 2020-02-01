@@ -40,3 +40,8 @@ export const post = joi.object().keys({
   id: joi.bigNumber().required().greaterThanOrEqualTo(0),
   account: joi.string().min(1),
 }).required()
+
+export const changewarrantor = joi.object().keys({
+  id: joi.bigNumber().required().greaterThanOrEqualTo(0),
+  warrantor: joi.string().min(0),
+}).required()

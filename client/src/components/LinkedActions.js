@@ -8,13 +8,14 @@ import { Link } from 'components/Link'
 const categories = {
   customer: {
     create: 'Create',
+    guarantee: 'Guarantee',
     // fund: 'Fund',
     // sell: 'Sell',
   },
   business: {
-    create: 'Create',
-    fund: 'Fund',
-    guarantee: 'Guarantee',
+    // create: 'Create',
+    // fund: 'Fund',
+    // guarantee: 'Guarantee',
     // transfer: 'Transfer',
   },
 }

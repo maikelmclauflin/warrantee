@@ -8,6 +8,7 @@ import { Dashboard } from './Dashboard'
 import { PerWarranty } from 'components/PerWarranty'
 import { LinkedActions } from 'components/LinkedActions'
 import { CreateWarranty } from 'components/CreateWarranty'
+import { GuaranteeWarranty } from 'components/GuaranteeWarranty'
 
 const PerWarrantyWithRouter = withRouter(PerWarranty)
 const DashboardWithRouter = withRouter(Dashboard)
@@ -21,11 +22,15 @@ export const Customer = (props) => {
     <Switch>
       <Route path={path + 'create/'}>
         {linked}
-        <CreateWarranty guarantee={false} />
+        <CreateWarranty />
       </Route>
       <Route path={path + 'warranty/:id/'}>
         {linked}
         <PerWarrantyWithRouter />
+      </Route>
+      <Route path={path + 'guarantee/'}>
+        {linked}
+        <GuaranteeWarranty />
       </Route>
       <Route>
         {linked}

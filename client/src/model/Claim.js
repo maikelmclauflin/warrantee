@@ -78,6 +78,9 @@ export class Claim {
     if (key === 'transfer') {
       return !this.terminated
     }
+    if (key === 'changewarrantor') {
+      return !this.terminated
+    }
   }
   states() {
     return ['terminated', 'fulfilled', 'redeemed'].reduce((memo, key) => {

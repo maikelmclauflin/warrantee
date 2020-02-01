@@ -50,14 +50,17 @@ export class ViewWarranty extends LoadsWarranty {
         <Button disabled={!claim.can('transfer')}>Transfer</Button>
       </Link>
     </Box>)
+    const changeWarrantor = (<Box mr={3} mt={3} width="auto" display="inline-block">
+      <Link to={`${url}changewarrantor/`}>
+        <Button disabled={!claim.can('changewarrantor')}>Transfer</Button>
+      </Link>
+    </Box>)
     if (business && iAmWarrantor) {
       actions = (
         <>
-          {terminate}
           {fund}
           {deredeem}
           {fulfill}
-          {transfer}
         </>
       )
     } else if (!business && iAmWarrantee) {
@@ -67,6 +70,7 @@ export class ViewWarranty extends LoadsWarranty {
           {fund}
           {redeem}
           {transfer}
+          {changeWarrantor}
         </>
       )
     }

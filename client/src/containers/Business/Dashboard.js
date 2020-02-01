@@ -12,7 +12,7 @@ export class Dashboard extends ShowWarranties {
     return warrantor.toLowerCase() === selectedAddress.toLowerCase() && !_.find(claims, { id })
   }
   async getPastEvents() {
-    const eventName = 'Guaranteed'
+    const eventName = 'WarrantorshipChanged'
     const { contract } = this.context
     const { givenProvider } = contract
     const { selectedAddress } = givenProvider

@@ -13,19 +13,19 @@ import {
   Form,
   FormContext
 } from 'components/Form'
-import { fund as fundSchema } from 'schemas'
-import { Web3Context } from 'contexts/Web3'
+import { changewarrantor as changewarrantorSchema } from 'schemas'
+import { ClaimContext } from 'contexts/Claim'
 import { ignoreReject } from 'utils'
 import { Processor } from 'components/Processor'
 import { deleteClaim } from 'model/Claim'
 
-export class PostWarranty extends Processor {
-  processorMethod = 'post'
+export class ChangeWarrantor extends Processor {
+  processorMethod = 'changewarrantor'
   toastConfig = {
-    processing: () => ({ message: 'Posting Claim...' }),
-    success: () => ({ message: 'Claim Available for Backing' }),
+    processing: () => ({ message: 'Changing Warrantor...' }),
+    success: () => ({ message: 'Warrantor Updated' }),
     failure: (error) => ({
-      message: 'Unable to Post Claim',
+      message: 'Unable to Change Warrantor',
       options: {
         variant: 'failure',
         secondaryMessage: error.toString(),
@@ -35,42 +35,38 @@ export class PostWarranty extends Processor {
   onSubmit(inputs) {
     return this.process(inputs)
   }
-  async fund(inputs) {
+  async changewarrantor(inputs) {
     const { context } = this
     const { contract, web3 } = context
-    const { toWei } = web3.utils
     const { selectedAddress } = web3.givenProvider
     const { methods } = contract
-    const { id, value } = inputs
+    const { id, warrantor } = inputs
     return ignoreReject(async () => {
       deleteClaim(id) // from cache
-      await methods.postClaim(id).send({
+      await methods.transferWarrantorship(id, warrantor).send({
         from: selectedAddress,
-        value: toWei(value, 'ether'),
       })
       return true
     })
   }
   render() {
-    const { props, state, onSubmit } = this
-    const { match = {} } = props
-    const { params = {} } = match
-    const { id } = params
+    const { context, state, onSubmit } = this
+    const { claim } = context
     const { processing, error } = state
     return (
       <Card p={3} mt={3}>
         {this.toastMessage()}
         <Helmet>
-          <title>Post Claim for Transfer</title>
+          <title>Update Claim Warrantor</title>
         </Helmet>
         <Form onSubmit={onSubmit.bind(this)}
-          validation={fundSchema}
+          validation={changewarrantorSchema}
           defaultInputs={{
-            id,
-            value: '0',
+            id: claim.id,
+            warrantor: claim.warrantor,
           }}>
           <Flex mx={3} flexWrap='wrap'>
-            <h3>Post a Claim for Transfer</h3>
+            <h3>Update Claim Warrantor</h3>
           </Flex>
           <FormContext.Consumer>{({ onChange, inputs, valid, validateds }) => (
             <Flex mt={3} flexWrap='wrap'>
@@ -79,26 +75,26 @@ export class PostWarranty extends Processor {
                   <Input
                     width={1}
                     type='number'
-                    required={true}
+                    disabled={true}
                     value={inputs.id || ''}
                     onChange={(e) => onChange('id', e)} />
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3}>
-                <Field label='Value to add in ether' width={1} validated={validateds.value}>
+                <Field label="Warrantor to set on the claim" width={1} validated={validateds.warrantor}>
                   <Input
                     width={1}
-                    type='number'
+                    type="text"
                     required={true}
-                    value={inputs.value || ''}
-                    onChange={(e) => onChange('value', e)} />
+                    value={inputs.warrantor || ''}
+                    onChange={(e) => onChange('warrantor', e)} />
                 </Field>
               </Box>
               <Box width={[1, 1, 1 / 2]} px={3} my={3}>
                 <Button
                   type='submit'
                   disabled={processing || !valid}>
-                  Post Claim for Transfer&nbsp;{processing ? <RimbleLoader color='white' /> : []}
+                  Fund Claim&nbsp;{processing ? <RimbleLoader color='white' /> : []}
                 </Button>
               </Box>
               {error ? <Box width={1} px={3} my={3}>
@@ -112,4 +108,4 @@ export class PostWarranty extends Processor {
   }
 }
 
-PostWarranty.contextType = Web3Context
+ChangeWarrantor.contextType = ClaimContext
