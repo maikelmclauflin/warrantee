@@ -27,7 +27,7 @@ export const fulfill = joi.object().keys({
 export const fund = joi.object().keys({
   id: joi.bigNumber().required().greaterThanOrEqualTo(0),
   back: joi.bigNumber().required().greaterThanOrEqualTo(0),
-  value: joi.bigNumber().required().greaterThanOrEqualTo((new BigNumber(1)).dividedBy(1e18)),
+  value: joi.bigNumber().required().greaterThanOrEqualTo(0),
 }).required()
 
 export const guarantee = joi.object().keys({
