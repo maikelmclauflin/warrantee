@@ -39,6 +39,10 @@ The first thing you may notice is that there is both a business and a customer t
   * utils/ReentrancyGuard.sol
   * lifecycle/Pausable.sol
 
+### Test comments 
+
+are in the test file iteself (`test/warranty.js`)
+
 ### User Stories
 
 product breaks + not reported -> nothing changes from real life. warranty expires

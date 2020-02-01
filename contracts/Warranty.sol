@@ -50,7 +50,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
   {}
 
   function () external payable {
-    deposit(msg.sender);
+    require(false, "fallback function use not allowed");
   }
 
   /**

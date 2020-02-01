@@ -22,6 +22,11 @@ contract("Warranty", (accounts) => {
   })
   describe('#createAndFundClaim()', () => {
     it("should fund a warranty", async () => {
+      /*
+        this is to test basic warranty creation and check that the 
+        contract understands that the value of a contract decays
+        and eventually goest to zero
+      */
       const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 3, "", "", {
         from: accounts[0],
         value: 5
@@ -41,6 +46,9 @@ contract("Warranty", (accounts) => {
   })
   describe('#redeemClaim()', () => {
     it('should be able to mark a warranty as redeemed #redeemClaim()', async () => {
+      /*
+        checked to make sure that a contract could redeem a claim
+      */
       const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", "", {
         from: accounts[0],
         value: 5
@@ -62,6 +70,10 @@ contract("Warranty", (accounts) => {
   })
   describe('#guaranteeClaim()', () => {
     it('should be able to claim ownership over a token, only if the ether is replaced', async () => {
+      /*
+        checked to make sure that the ownership of a token could be changed from one account to another
+        and that the metadata does not get locked as it moves from state to state
+      */
       const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10000, "", "", {
         from: accounts[0],
         value: 10
@@ -96,6 +108,9 @@ contract("Warranty", (accounts) => {
   })
   describe('#terminateClaim()', () => {
     it('should decay the value returned to token holder linearly', async () => {
+      /*
+        checks to make sure that a claim divides its value if it is terminated within its expiry time
+      */
       const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", "", {
         from: accounts[0],
         value: 10
@@ -112,6 +127,9 @@ contract("Warranty", (accounts) => {
       expect(ownerBalance).to.be.bignumber.equal(8)
     })
     it('unlocked funds can be released', async () => {
+      /*
+        check to make sure that funds assigned to an account and not a claim can be released
+      */
       const valuation = toWei('5', 'ether')
       const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], valuation, 10, "", "", {
         from: accounts[0],
@@ -146,6 +164,9 @@ contract("Warranty", (accounts) => {
       expect(balanceAfter1.minus(balance1)).to.be.bignumber.at.most(toWei('0.2', 'ether'))
     })
     it('deposits the same amount in funds no matter how long after the claim expires', async () => {
+      /*
+        credits are still applied no matter how long after the token expires
+      */
       const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 2, "", "", {
         from: accounts[0],
         value: 1000
@@ -163,6 +184,11 @@ contract("Warranty", (accounts) => {
   })
   describe('#fulfillClaim()', () => {
     it('can be fullfilled by the warrantor', async () => {
+      /*
+        the token can be fulfilled by the warrantor instead of the warrantee...
+        even if that generally doesn't happen in real life
+        in this test i also ensure that one probi too few results in a failure.
+      */
       const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", "", {
         from: accounts[0],
         value: 1000
@@ -181,6 +207,11 @@ contract("Warranty", (accounts) => {
       expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(10000)
     })
     it('can be provided more than enough value', async () => {
+      /*
+        excess value is applied to the user's credit and is applied whenever enough eth is not provided in the transaction
+        this is important because warranties can be quite large, especially after just completing a large purchase
+        it doesn't make sense to shuffle monies around just to get your warranty
+      */
       const createTx1 = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", "", {
         from: accounts[0],
         value: 1000
@@ -211,6 +242,11 @@ contract("Warranty", (accounts) => {
   })
   describe('#createClaim()', () => {
     it('can just create a claim to be claimed later', async () => {
+      /*
+        sometimes a token doesn't need to be filled right away.
+        perhaps the ratio of how much eth that should be applied to that token hasn't been determined yet.
+        In that case, just create the warranty, and sit on it until you know, then you can fund it. the Activated time will not be set until a warrantor is
+      */
       const createTx1 = await warranty.createClaim(accounts[0], 10000, 60, "", "", {
         from: accounts[0]
       })
@@ -238,14 +274,18 @@ contract("Warranty", (accounts) => {
     })
   })
   describe('#fallback()', () => {
-    it('just deposits whatever eth it receives', async () => {
-      await web3.eth.sendTransaction({
+    it('fails', async () => {
+      /*
+        check to make sure that the fallback rejects the transaction
+        value is credited to the user that sent the funds
+      */
+      await throws(web3.eth.sendTransaction({
         from: accounts[0],
         to: warranty.address,
         value: 10001,
+        // fallback function
         data: "",
-      })
-      expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(10001)
+      }))
     })
   })
 })
