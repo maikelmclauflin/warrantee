@@ -15,6 +15,7 @@ export const ViewClaimMetadata = ({ claim }) => {
       <Text title="Valuation">{fromWei(claim.valuation, 'ether')} ether</Text>
       <Text title="Value">{fromWei(claim.value, 'ether')} ether</Text>
       <Text title="Progress"><Progress claim={claim} /></Text>
+      <Text title="Notes"><pre>{claim.notes}</pre></Text>
     </>
   )
 }

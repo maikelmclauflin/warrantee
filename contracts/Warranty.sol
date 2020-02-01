@@ -226,6 +226,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
       credit(claim.warrantor, claim.value.sub(leftover));
     }
     claim.terminated = true;
+    updateClaimValue(tokenId, 0); // remove funds locked in claim
     emit Terminated(tokenId);
   }
   /**
@@ -401,8 +402,10 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     }
   }
   function updateClaimValue(uint256 tokenId, uint256 value) internal {
-    _claims[tokenId].value = value;
-    emit ClaimBalanceUpdated(tokenId, value);
+    if (_claims[tokenId].value != value) {
+      _claims[tokenId].value = value;
+      emit ClaimBalanceUpdated(tokenId, value);
+    }
   }
   /**
    * @notice De-Redeems a claim. Allows for warrantee or warrantor to reset time if guarantee's submission did not meet agreement, or for any other reason
