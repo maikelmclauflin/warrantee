@@ -44,7 +44,7 @@ export class FundWarranty extends Processor {
     const { id, value, back } = inputs
     return ignoreReject(async () => {
       deleteClaim(id) // from cache
-      await methods.fundClaim(id, back).send({
+      await methods.fundClaim(id, toWei(back, 'ether')).send({
         from: selectedAddress,
         value: toWei(value, 'ether'),
       })
