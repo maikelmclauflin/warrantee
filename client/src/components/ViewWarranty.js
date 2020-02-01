@@ -52,7 +52,7 @@ export class ViewWarranty extends LoadsWarranty {
     </Box>)
     const changeWarrantor = (<Box mr={3} mt={3} width="auto" display="inline-block">
       <Link to={`${url}changewarrantor/`}>
-        <Button disabled={!claim.can('changewarrantor')}>Transfer</Button>
+        <Button disabled={!claim.can('changewarrantor')}>Change Warrantor</Button>
       </Link>
     </Box>)
     if (business && iAmWarrantor) {
