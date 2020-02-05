@@ -11,7 +11,7 @@ this contract and client code allows a pair of entities to setup a warranty rela
 * To setup, open at least two terminal windows.
 * in the first, type 
 ```
-ganache-cli -m="fruit immense dentist fruit pledge giant begin ski sibling ride vanish load"
+ganache-cli -m="fruit immense dentist fruit pledge giant begin ski sibling ride vanish load" -b=1
 ```
 * in the second run 
 ```
