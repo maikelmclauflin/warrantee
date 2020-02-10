@@ -31,7 +31,7 @@ module.exports = {
       websockets: true
     },
     ropsten: {
-      provider: new HDWalletProvider(mnemonic, 'https://ropsten.infura.io/v3/' + infura_apikey),
+      provider: () => new HDWalletProvider(mnemonic, 'https://ropsten.infura.io/v3/' + infura_apikey),
       network_id: 3
     }
   },
