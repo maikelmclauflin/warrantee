@@ -31,16 +31,16 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     bool redeemed;
     bool fulfilled;
     bool terminated;
-    string notes;
   }
 
-  event BalanceUpdated(address indexed addr, uint256 amount, uint256 balance, bool negative);
-  event Withdrawn(address indexed addr, address indexed target, uint256 amount, uint256 balance);
-  event Redeemed(address indexed warrantor, address indexed warrantee, uint256 indexed tokenId, bool redeemed);
-  event Fulfilled(address indexed warrantor, address indexed warrantee, uint256 indexed tokenId, bool redeemed);
-  event Terminated(uint256 indexed tokenId);
-  event WarrantorshipChanged(address indexed warrantor, uint256 indexed tokenId);
+  event BalanceUpdated(address indexed account, uint256 amount, uint256 balance, bool negative);
+  event Withdrawn(address indexed account, address indexed target, uint256 amount, uint256 balance);
+  event Redeemed(uint256 indexed tokenId, address indexed warrantor, address indexed warrantee, bool redeemed);
+  event Fulfilled(uint256 indexed tokenId, address indexed warrantor, address indexed warrantee, bool redeemed);
+  event Terminated(uint256 indexed tokenId, address indexed account);
+  event WarrantorshipChanged(uint256 indexed tokenId, address indexed warrantor);
   event ClaimBalanceUpdated(uint256 indexed tokenId, uint256 value);
+  event NotesAppended(uint256 indexed tokenId, address indexed account, string notes);
 
   constructor()
     ERC721Metadata("Warrantee", "WRNT")
@@ -191,18 +191,18 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     }
     emit BalanceUpdated(account, amount, _balances[account], negative);
   }
-  function credit(address payee, uint256 amount) internal {
+  function creditAccount(address payee, uint256 amount) internal {
     updateBalance(payee, amount, false);
   }
-  function debit(address payer, uint256 amount) internal {
+  function debitAccount(address payer, uint256 amount) internal {
     updateBalance(payer, amount, true);
   }
   /**
    * @notice Deposits eth and directly credits an account
    * @param account address to send the eth to
    */
-  function deposit(address account) public payable whenNotPaused {
-    credit(account, msg.value);
+  function depositToAccount(address account) public payable whenNotPaused {
+    creditAccount(account, msg.value);
   }
   /**
    * @notice Warrantor can fulfill the claim for the amount agreed upon when the claim was first created.
@@ -219,14 +219,14 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     Claim storage claim = _claims[tokenId];
     // if the warrantor sends more than enough or has enough in their balance
     uint256 bal = balance(msg.sender);
-    debit(msg.sender, bal); // guarantor temporarily has zero balance
+    debitAccount(msg.sender, bal); // guarantor temporarily has zero balance
     uint256 value = claim.value.add(msg.value).add(bal);
     require(value >= claim.valuation, "claim can only be fullfilled for the original agreed upon valuation");
-    credit(msg.sender, value.sub(claim.valuation));
-    credit(this.ownerOf(tokenId), claim.valuation);
+    creditAccount(msg.sender, value.sub(claim.valuation));
+    creditAccount(this.ownerOf(tokenId), claim.valuation);
     updateClaimValue(tokenId, 0); // remove funds locked in claim
     claim.fulfilled = true;
-    emit Fulfilled(msg.sender, warrantee, tokenId, claim.redeemed);
+    emit Fulfilled(tokenId, msg.sender, warrantee, claim.redeemed);
     _terminateClaim(tokenId);
   }
   function _terminateClaim(uint256 tokenId)
@@ -238,12 +238,12 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
       // should only have value assigned, to be divii'd up if claim has not been fulfilled
       uint256 elapsed = claim.expiresAfter.sub(timeToClaimExpire(tokenId));
       uint256 leftover = claim.value.mul(claim.expiresAfter).sub(claim.value.mul(elapsed)).div(claim.expiresAfter);
-      credit(this.ownerOf(tokenId), leftover);
-      credit(claim.warrantor, claim.value.sub(leftover));
+      creditAccount(this.ownerOf(tokenId), leftover);
+      creditAccount(claim.warrantor, claim.value.sub(leftover));
     }
     claim.terminated = true;
     updateClaimValue(tokenId, 0); // remove funds locked in claim
-    emit Terminated(tokenId);
+    emit Terminated(tokenId, msg.sender);
   }
   /**
    * @notice Terminates the claim in question. Ends the claim completely and hands all funds over to the warrantor.
@@ -276,7 +276,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     if (address(0) == target) {
       target = sender;
     }
-    debit(sender, amount);
+    debitAccount(sender, amount);
     target.sendValue(amount);
     emit Withdrawn(sender, target, amount, _balances[sender]);
   }
@@ -287,7 +287,6 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
    * @param valuation uint256 is the value agreed that is required to fulfill the claim at the end of its life
    * @param expiresAfter uint256 creates a window in seconds within which a claim can be redeemed to be subesequently fulfilled.
    * @param tokenURI optional string provides the token uri in json format: https://eips.ethereum.org/EIPS/eip-721
-   * @param notes optional string provides extra arbitrary context
    * @return tokenId uint256 sends back the tokenId created
    */
   function createAndFundClaim(
@@ -295,26 +294,31 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     address payable warrantor,
     uint256 valuation,
     uint256 expiresAfter,
-    string memory tokenURI,
-    string memory notes
+    string memory tokenURI
   )
     public
     payable
     returns(uint256)
   {
-    uint256 tokenId = createClaim(warrantee, valuation, expiresAfter, tokenURI, notes);
+    uint256 tokenId = createClaim(warrantee, valuation, expiresAfter, tokenURI);
     transferWarrantorship(tokenId, warrantor);
     fundClaim(tokenId, msg.value);
     return tokenId;
   }
+  /**
+   * @notice transfers the warrantor of the erc721 to another owner
+   * @param tokenId uint256 the token to transfer
+   * @param account address the account to transfer to
+   */
   function transferWarrantorship(uint256 tokenId, address account)
     public
+    whenNotPaused
     notExpiredOnly(tokenId)
     warranteeOnly(tokenId)
   {
     _activateClaim(tokenId);
     _claims[tokenId].warrantor = account;
-    emit WarrantorshipChanged(account, tokenId);
+    emit WarrantorshipChanged(tokenId, account);
   }
   /**
    * @notice provides the full timeline for a given claim's expiration
@@ -368,7 +372,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     require(availableCredit >= claim.value, "available credit must meet or exceed claim value");
     require(value >= claim.value, "claim must preserve currently backed value");
     address previousOwner = this.ownerOf(tokenId);
-    credit(previousOwner, claim.value); // give back the value provided by previous warrantor
+    creditAccount(previousOwner, claim.value); // give back the value provided by previous warrantor
     claim.value = 0; // reset value
     fundClaim(tokenId, value); // back claim with new and old value
     transferFrom(previousOwner, msg.sender, tokenId); // transfer token
@@ -411,9 +415,9 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
   function _pendingTransferClaim(uint256 tokenId, address account) internal {
     _pendingTransfer[tokenId] = account;
   }
-  // anybody can add to a claim's value. value will only be accessable to the owner
   /**
    * @notice Fund a claim
+   * @notice anybody can add to a claim's value. value will only be accessable to the owner
    * @dev only funds if the claim has not already been terminated.
    * Otherwise it would go directly to the warrantor or the warrantee if it was redeemed.
    * That's just confusing.
@@ -424,9 +428,9 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     payable
     notTerminatedOnly(tokenId)
   {
-    deposit(msg.sender);
+    depositToAccount(msg.sender);
     creditClaim(tokenId, amount);
-    debit(msg.sender, amount);
+    debitAccount(msg.sender, amount);
   }
   function creditClaim(uint256 tokenId, uint256 value) internal {
     if (value != 0) {
@@ -454,7 +458,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
   {
     require(_claims[tokenId].redeemed, "only a redeemed claim can be reset");
     _claims[tokenId].redeemed = false;
-    emit Redeemed(_claims[tokenId].warrantor, this.ownerOf(tokenId), tokenId, _claims[tokenId].redeemed);
+    emit Redeemed(tokenId, _claims[tokenId].warrantor, this.ownerOf(tokenId), _claims[tokenId].redeemed);
     if (msg.sender == _claims[tokenId].warrantor) {
       extendClaimExpiration(tokenId, expiryTime, delayTime);
     }
@@ -466,9 +470,8 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
     // can be expired, just not terminated
     notTerminatedOnly(tokenId)
   {
-    Claim storage claim = _claims[tokenId];
-    credit(this.ownerOf(tokenId), claim.value);
-    claim.value = 0;
+    creditAccount(this.ownerOf(tokenId), _claims[tokenId].value);
+    _claims[tokenId].value = 0;
     _terminateClaim(tokenId);
   }
   /**
@@ -485,7 +488,7 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
   {
     require(!_claims[tokenId].redeemed, "claim cannot be redeemed");
     _claims[tokenId].redeemed = true;
-    emit Redeemed(_claims[tokenId].warrantor, this.ownerOf(tokenId), tokenId, _claims[tokenId].redeemed);
+    emit Redeemed(tokenId, _claims[tokenId].warrantor, this.ownerOf(tokenId), _claims[tokenId].redeemed);
   }
   /**
    * @notice overwrites an internal safeMint to allow anyone to mint their own
@@ -506,15 +509,13 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
    * @param valuation holds the agreed upon valuation of the claim
    * @param expiresAfter holds the number of seconds after the claim is guaranteed by a warrantor that the warranty should expire
    * @param tokenURI optional string provides the token uri in json format: https://eips.ethereum.org/EIPS/eip-721
-   * @param notes optional string provides extra arbitrary context
    * @return tokenId uint256 sends back the tokenId created
    */
   function createClaim(
     address warrantee,
     uint256 valuation,
     uint256 expiresAfter,
-    string memory tokenURI,
-    string memory notes
+    string memory tokenURI
   )
     public
     whenNotPaused
@@ -538,10 +539,24 @@ contract Warranty is ERC721Metadata, ReentrancyGuard, Pausable {
       expiresAfter: expiresAfter,
       redeemed: false,
       fulfilled: false,
-      terminated: false,
-      // arbitrary data that must be on chain
-      notes: notes
+      terminated: false
     }));
     return tokenId;
+  }
+  /**
+   * @notice adds notes to a particular claim
+   * @param tokenId uint256 the token to target
+   * @param notes optional string the notes to append
+   */
+  function addNotes(
+    uint256 tokenId,
+    string memory notes
+  )
+    public
+    warranteeOrWarrantorOnly(tokenId)
+  {
+    if (bytes(notes).length > 0) {
+      emit NotesAppended(tokenId, msg.sender, notes);
+    }
   }
 }

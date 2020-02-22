@@ -41,7 +41,7 @@ export class CreateWarranty extends Processor {
     const from = givenProvider.selectedAddress
     const valuationWei = toWei(valuation, 'ether')
     return ignoreReject(async () => {
-      await methods.createAndFundClaim(warrantee, warrantor, valuationWei, expiresAfter, tokenURI, notes).send({
+      await methods.createAndFundClaim(warrantee, warrantor, valuationWei, expiresAfter, tokenURI).send({
         value: toWei(value, 'ether'),
         from,
       })

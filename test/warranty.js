@@ -27,7 +27,7 @@ contract("Warranty", (accounts) => {
         contract understands that the value of a contract decays
         and eventually goest to zero
       */
-      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 3, "", "", {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 3, "", {
         from: accounts[0],
         value: 5
       })
@@ -49,14 +49,14 @@ contract("Warranty", (accounts) => {
       /*
         checked to make sure that a contract could redeem a claim
       */
-      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", "", {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", {
         from: accounts[0],
         value: 5
       })
       const tokenId = getTokenId(createTx, accounts[0])
       await throws(warranty.redeemClaim(tokenId, {
         from: accounts[2]
-      }), 'sender must be the owner of the token')
+      }), 'sender must be the owner of the token', "sender must either be the token owner (warrantee) or the warrantor")
       await throws(warranty.redeemClaim(tokenId, {
         from: accounts[1]
       }), 'sender must be the owner of the token')
@@ -68,13 +68,54 @@ contract("Warranty", (accounts) => {
       expect(claim.fulfilled).to.be.equal(false)
     })
   })
+  describe('#deredeemClaim()', () => {
+    it('should be able to reverse a redemption before it completes', async () => {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", {
+        from: accounts[0],
+        value: 5
+      })
+      const tokenId = getTokenId(createTx, accounts[0])
+      await warranty.redeemClaim(tokenId, {
+        from: accounts[0]
+      })
+      const claimV1 = await warranty._claims(tokenId)
+      expect(claimV1.redeemed).to.be.equal(true)
+      expect(claimV1.fulfilled).to.be.equal(false)
+      await warranty.deredeemClaim(tokenId, 0, 0, {
+        from: accounts[0]
+      })
+      const claimV2 = await warranty._claims(tokenId)
+      expect(claimV2.redeemed).to.be.equal(false)
+      expect(claimV2.fulfilled).to.be.equal(false)
+    })
+    it('can add extra time if the warrantor deredeems', async () => {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", {
+        from: accounts[0],
+        value: 5
+      })
+      const tokenId = getTokenId(createTx, accounts[0])
+      
+      await warranty.redeemClaim(tokenId, {
+        from: accounts[0]
+      })
+      const claimV1 = await warranty._claims(tokenId)
+
+      await warranty.deredeemClaim(tokenId, 1000, 1000, {
+        from: accounts[1]
+      })
+      const claimV2 = await warranty._claims(tokenId)
+
+      expect(claimV2.delayTime).to.be.bignumber.equal(1000)
+      expect(claimV2.expiresAfter.minus(claimV1.expiresAfter)).to.be.bignumber.equal(1000)
+    })
+  })
   describe('#guaranteeClaim()', () => {
     it('should be able to claim ownership over a token, only if the ether is replaced', async () => {
       /*
         checked to make sure that the ownership of a token could be changed from one account to another
         and that the metadata does not get locked as it moves from state to state
       */
-      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10000, "", "", {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10000, "", {
         from: accounts[0],
         value: 10
       })
@@ -111,7 +152,7 @@ contract("Warranty", (accounts) => {
       /*
         checks to make sure that a claim divides its value if it is terminated within its expiry time
       */
-      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", "", {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 50, 10, "", {
         from: accounts[0],
         value: 10
       })
@@ -131,7 +172,7 @@ contract("Warranty", (accounts) => {
         check to make sure that funds assigned to an account and not a claim can be released
       */
       const valuation = toWei('5', 'ether')
-      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], valuation, 10, "", "", {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], valuation, 10, "", {
         from: accounts[0],
         value: toWei('0.5', "ether")
       })
@@ -167,7 +208,7 @@ contract("Warranty", (accounts) => {
       /*
         credits are still applied no matter how long after the token expires
       */
-      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 2, "", "", {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 2, "", {
         from: accounts[0],
         value: 1000
       })
@@ -189,7 +230,7 @@ contract("Warranty", (accounts) => {
         even if that generally doesn't happen in real life
         in this test i also ensure that one probi too few results in a failure.
       */
-      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", "", {
+      const createTx = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", {
         from: accounts[0],
         value: 1000
       })
@@ -212,7 +253,7 @@ contract("Warranty", (accounts) => {
         this is important because warranties can be quite large, especially after just completing a large purchase
         it doesn't make sense to shuffle monies around just to get your warranty
       */
-      const createTx1 = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", "", {
+      const createTx1 = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", {
         from: accounts[0],
         value: 1000
       })
@@ -225,7 +266,7 @@ contract("Warranty", (accounts) => {
       expect(await warranty.balance(accounts[1])).to.be.bignumber.equal(9000)
       expect(await warranty.balance(accounts[0])).to.be.bignumber.equal(10000)
       // create another one
-      const createTx2 = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", "", {
+      const createTx2 = await warranty.createAndFundClaim(accounts[0], accounts[1], 10000, 60, "", {
         from: accounts[0],
         value: 1000
       })
@@ -247,7 +288,7 @@ contract("Warranty", (accounts) => {
         perhaps the ratio of how much eth that should be applied to that token hasn't been determined yet.
         In that case, just create the warranty, and sit on it until you know, then you can fund it. the Activated time will not be set until a warrantor is
       */
-      const createTx1 = await warranty.createClaim(accounts[0], 10000, 60, "", "", {
+      const createTx1 = await warranty.createClaim(accounts[0], 10000, 60, "", {
         from: accounts[0]
       })
       const tokenId1 = getTokenId(createTx1, accounts[0])
@@ -271,6 +312,56 @@ contract("Warranty", (accounts) => {
         from: accounts[2],
         value: 1000,
       }), "unable to hand off claim unless it is first posted for transfer")
+    })
+  })
+  describe('#addNotes()', () => {
+    it('adds notes when length is non zero', async () => {
+      const createTx1 = await warranty.createClaim(accounts[0], 10000, 60, "", {
+        from: accounts[0]
+      })
+      const tokenId1 = getTokenId(createTx1, accounts[0])
+      const notesReceipts1 = await warranty.addNotes(tokenId1, "", {
+        from: accounts[0]
+      })
+      truffleAssert.eventNotEmitted(notesReceipts1, "NotesAppended", {}, "empty notes should not be appended")
+      
+      const notes = "notes go here"
+      const notesReceipts2 = await warranty.addNotes(tokenId1, notes, {
+        from: accounts[0]
+      })
+      truffleAssert.eventEmitted(notesReceipts2, "NotesAppended", {
+        tokenId: tokenId1,
+        notes
+      }, "notes should be logged")
+    })
+    it('can come from warrantor or warrantee', async () => {
+      const notes = "notes go here"
+      
+      const createTx1 = await warranty.createClaim(accounts[0], 10000, 60, "", {
+        from: accounts[0]
+      })
+      const tokenId1 = getTokenId(createTx1, accounts[0])
+      
+      await throws(warranty.addNotes(tokenId1, notes, {
+        from: accounts[1]
+      }), "sender must either be the token owner (warrantee) or the warrantor")
+      
+      await warranty.fundClaim(tokenId1, 1000, {
+        from: accounts[0],
+        value: 1000
+      })
+      await warranty.transferWarrantorship(tokenId1, accounts[1], {
+        from: accounts[0],
+      })
+
+      const notesReceipts3 = await warranty.addNotes(tokenId1, notes, {
+        from: accounts[1]
+      })
+
+      truffleAssert.eventEmitted(notesReceipts3, "NotesAppended", {
+        tokenId: tokenId1,
+        notes
+      }, "notes should be logged")
     })
   })
   describe('#fallback()', () => {
